@@ -267,9 +267,9 @@ int main(int argc, char* argv[]) {
        parse(base_url(group_names[group - 1]));
     }
     else if (argc == 4 || argc == 5) {
-      unsigned group = stoi(argv[3]);
       if (argc == 4) {
         if (strcmp(argv[3], "--list")) {
+          unsigned group = stoi(argv[3]);
           group_names = parse_group(group_url(dep, course), dep, course);
 
           if (group <= group_names.size() && group != 0)
@@ -281,6 +281,7 @@ int main(int argc, char* argv[]) {
           parse_group(group_url(dep, course), dep, course, true);
       }
       else if (argc == 5) {
+        unsigned group = stoi(argv[3]);
         unsigned char week = stoi(argv[4]);
         if (week > 18 || week == 0)
           printUsage();
