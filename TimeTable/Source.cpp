@@ -5,7 +5,10 @@
 #include <iomanip>
 #include <vector>
 #include <string>
+#include <limits>
 #include <curl.h>
+
+#undef max
 
 using namespace std;
 using namespace std::filesystem;
@@ -202,7 +205,6 @@ vector<string> parse_group(const string& url, const unsigned char& dep,
       group_names.push_back(text);
     }
   }
-
   return group_names;
 }
 
@@ -216,12 +218,12 @@ void printUsage() {
   exit(1);
 }
 
-const string base_url(const string group) {
+const string base_url(const string& group) {
   return "http://mai.ru/education/studies/schedule/index.php?group="
     + group;
 }
 
-const string week_url(const string group,
+const string week_url(const string& group,
   const unsigned char& week) {
   return "http://mai.ru/education/studies/schedule/index.php?group="
     + group + "&week=" + to_string(+week);
@@ -262,7 +264,11 @@ int main(int argc, char* argv[]) {
       group_names = parse_group(group_url(dep, course), dep, course, true);
       while (group == 0 || group > group_names.size()) {
         cout << "Введите номер группы: ";
-        cin >> group;
+        while (!(cin >> group)) {
+          cout << "Введите номер группы: ";
+          cin.clear();
+          cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
+        }
       }
        parse(base_url(group_names[group - 1]));
     }
