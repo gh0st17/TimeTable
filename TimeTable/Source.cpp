@@ -10,25 +10,39 @@
 
 #undef max
 
+#include "Params.hpp"
+
 using namespace std;
 using namespace std::filesystem;
 
 struct group_predicate {
-  bool operator()(pugi::xml_node node) const
-  {
+  bool operator()(pugi::xml_node node) const {
     return !strcmp(node.name(), "h1") &&
       !strcmp(node.first_attribute().value(), "mb-5");
   }
 };
 
 struct week_predicate {
-  bool operator()(pugi::xml_node node) const
-  {
+  bool operator()(pugi::xml_node node) const {
     return !strcmp(node.name(), "h3") &&
       !strcmp(node.first_attribute().value(),
         "me-5 mb-2 fw-medium");
   }
 };
+
+const string base_url(const Params& p) {
+  return "http://mai.ru/education/studies/schedule/index.php?group="
+    + p.group_names[p.group - 1];
+}
+
+const string week_url(const Params& p) {
+  return base_url(p) + "&week=" + to_string(p.week);
+}
+
+const string group_url(const Params& p) {
+  return "https://mai.ru/education/studies/schedule/groups.php?department=Институт+№"
+    + to_string(p.dep) + "&course=" + to_string(p.course);
+}
 
 const string proceedHTML(string html) {
   const string block[] = { "head", "section",
@@ -143,20 +157,15 @@ void parse(const string& url) {
   }
 }
 
-vector<string> parse_group(const string& url, const unsigned char& dep, 
-                          const unsigned char& course, const bool print = false) {
-  vector<string> group_names;
-
+void parse_group(Params& p) {
   pugi::xml_document doc;
-  const string filename = to_string(+dep) + '-' +
-    to_string(+course) + ".xml";
-  if (exists(current_path().u8string() + "\\" + filename)) {
+  if (exists(current_path().u8string() + "\\" + p.filename)) {
     cout << "Загружаю список групп из кэша\n\n";
-    doc.load_file(filename.c_str());
+    doc.load_file(p.filename.c_str());
   }
   else {
-    doc.load_string(proceedHTML(fetchURL(url)).c_str());
-    doc.save_file(filename.c_str());
+    doc.load_string(proceedHTML(fetchURL(group_url(p))).c_str());
+    doc.save_file(p.filename.c_str());
   }
 
   string text;
@@ -168,105 +177,42 @@ vector<string> parse_group(const string& url, const unsigned char& dep,
     nodes = group.node().select_nodes("a");
     for (const auto& node : nodes) {
       text = node.node().child_value();
-      if (print)
+      if ((p.list || !p.group))
         cout << setw(2) << i++ << ") " << text << endl;
-      group_names.push_back(text);
+      p.group_names.push_back(text);
     }
   }
-  return group_names;
-}
-
-void printUsage() {
-  cout << "TimeTable.exe {Институт} {Курс} [Номер группы из списка] \
-[номер недели 1-18]\n";
-  cout << "TimeTable.exe {Институт} {Курс} --list\n";
-  cout << "TimeTable.exe --clear\n\n";
-  cout << "  --list  - Показать только список групп\n";
-  cout << "  --clear - Очистить весь кэш\n";
-  exit(1);
-}
-
-const string base_url(const string& group) {
-  return "http://mai.ru/education/studies/schedule/index.php?group="
-    + group;
-}
-
-const string week_url(const string& group,
-  const unsigned char& week) {
-  return "http://mai.ru/education/studies/schedule/index.php?group="
-    + group + "&week=" + to_string(+week);
-}
-
-const string group_url(const unsigned char& dep,
-  const unsigned char& course) {
-  return "https://mai.ru/education/studies/schedule/groups.php?department=Институт+№"
-    + to_string(+dep) + "&course=" + to_string(+course);
 }
 
 int main(int argc, char* argv[]) {
-  if (argc == 2 && !strcmp(argv[1], "--clear")) {
-    unsigned cnt{ 0 };
-    for (const auto& file : directory_iterator("./")) {
-      if (file.path().extension() == ".xml") {
-        cout << file.path().filename().u8string() << endl;
-        remove(file.path());
-        cnt++;
-      }
-    }
-    cout << "Удалено файлов: " << cnt << endl;
-    return 0;
-  }
-  else if (argc < 2 || argc > 5)
-    printUsage();
-
   try {
-    unsigned char dep = stoi(argv[1]), course = stoi(argv[2]);
-    if (dep > 12 || dep == 0 ||
-        course > 6 || course == 0)
-      printUsage();
+    Params p(argc, argv);
 
-    vector<string> group_names;
-
-    if (argc == 3) {
-      unsigned group = 0;
-      group_names = parse_group(group_url(dep, course), dep, course, true);
-      while (group == 0 || group > group_names.size()) {
-        cout << "Введите номер группы: ";
-        while (!(cin >> group)) {
-          cout << "Введите номер группы: ";
-          cin.clear();
-          cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
+    if (p.clear) {
+      unsigned cnt{ 0 };
+      for (const auto& file : directory_iterator("./")) {
+        if (file.path().extension() == ".xml") {
+          cout << file.path().filename().u8string() << endl;
+          remove(file.path());
+          cnt++;
         }
       }
-       parse(base_url(group_names[group - 1]));
+      cout << "Удалено файлов: " << cnt << endl;
     }
-    else if (argc == 4 || argc == 5) {
-      if (argc == 4) {
-        if (strcmp(argv[3], "--list")) {
-          unsigned group = stoi(argv[3]);
-          group_names = parse_group(group_url(dep, course), dep, course);
-
-          if (group <= group_names.size() && group != 0)
-            parse(base_url(group_names[group - 1]));
-          else
-            throw "Такого номера группы не существует";
-        }
-        else
-          parse_group(group_url(dep, course), dep, course, true);
+    else if (p.list)
+      return 0;
+    else if (p.group && p.week) 
+      parse(week_url(p));
+    else if (p.group && !p.week)
+      parse(base_url(p));
+    else {
+      cout << "Введите номер группы: ";
+      while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
+        cout << "Введите номер группы: ";
+        cin.clear();
+        cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
       }
-      else if (argc == 5) {
-        unsigned group = stoi(argv[3]);
-        unsigned char week = stoi(argv[4]);
-        if (week > 18 || week == 0)
-          printUsage();
-
-        group_names = parse_group(group_url(dep, course), dep, course);
-
-        if (group <= group_names.size() && group != 0)
-          parse(week_url(group_names[group - 1], week));
-        else
-          throw "Такого номера группы не существует";
-      }
+      parse(base_url(p));
     }
   }
   catch (bad_alloc const&) {
@@ -278,6 +224,5 @@ int main(int argc, char* argv[]) {
   catch (const char* e) {
     cerr << e << endl;
   }
-
   return 0;
 }
