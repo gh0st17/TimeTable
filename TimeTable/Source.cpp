@@ -10,71 +10,64 @@
 
 #undef max
 
+#include "Params.hpp"
+
 using namespace std;
 using namespace std::filesystem;
 
 struct group_predicate {
-  bool operator()(pugi::xml_node node) const
-  {
+  bool operator()(pugi::xml_node node) const {
     return !strcmp(node.name(), "h1") &&
       !strcmp(node.first_attribute().value(), "mb-5");
   }
 };
 
 struct week_predicate {
-  bool operator()(pugi::xml_node node) const
-  {
+  bool operator()(pugi::xml_node node) const {
     return !strcmp(node.name(), "h3") &&
       !strcmp(node.first_attribute().value(),
         "me-5 mb-2 fw-medium");
   }
 };
 
+const string base_url(const Params& p) {
+  return "http://mai.ru/education/studies/schedule/index.php?group="
+    + p.group_names[p.group - 1];
+}
+
+const string week_url(const Params& p) {
+  return base_url(p) + "&week=" + to_string(p.week);
+}
+
+const string group_url(const Params& p) {
+  return "https://mai.ru/education/studies/schedule/groups.php?department=Институт+№"
+    + to_string(p.dep) + "&course=" + to_string(p.course);
+}
+
 const string proceedHTML(string html) {
-  size_t p1 = html.find("<head"),
-    p2 = html.find("</head>");
-  html.erase(p1, p2 + 7 - p1);
+  const string block[] = { "head", "section",
+    "header", "script", "form" };
+  size_t p1, p2;
 
-  p1 = html.find("<section");
-  p2 = html.find("</section>");
-  html.erase(p1, p2 + 10 - p1);
-
-  p1 = html.find("<header");
-  p2 = html.find("</header>");
-  html.erase(p1, p2 + 9 - p1);
-
-  p1 = html.find("<script");
-  p2 = html.find("</script>");
-  while (p1 != string::npos && p2 != string::npos) {
-    html.erase(p1, p2 + 9 - p1);
-    p1 = html.find("<script");
-    p2 = html.find("</script>");
+  for (const auto& x : block) {
+    p1 = html.find("<" + x);
+    p2 = html.find("</" + x + ">");
+    while (p1 != string::npos && p2 != string::npos) {
+      html.erase(p1, p2 + x.length() + 3 - p1);
+      p1 = html.find("<" + x);
+      p2 = html.find("</" + x + ">");
+    }
   }
 
-  p1 = html.find("<form");
-  p2 = html.find("</form>");
-  while (p1 != string::npos && p2 != string::npos) {
-    html.erase(p1, p2 + 7 - p1);
-    p1 = html.find("<form");
-    p2 = html.find("</form>");
-  }
+  const vector<string> single = { "</h5>", "&nbsp;", "&ndash;" };
+  const string new_single[] = { " ", " ", "-" };
 
-  p1 = html.find("</h5>");
-  while (p1 != string::npos) {
-    html.erase(p1, 5);
-    p1 = html.find("</h5>");
-  }
-
-  p1 = html.find("&nbsp;");
-  while (p1 != string::npos) {
-    html.replace(p1, 6, " ", 1);
-    p1 = html.find("&nbsp;");
-  }
-
-  p1 = html.find("&ndash;");
-  while (p1 != string::npos) {
-    html.replace(p1, 7, "-", 1);
-    p1 = html.find("&ndash;");
+  for (size_t i = 0; i < single.size(); i++) {
+    p1 = html.find(single[i]);
+    while (p1 != string::npos) {
+      html.replace(p1, single[i].length(), new_single[i].c_str(), 1);
+      p1 = html.find(single[i]);
+    }
   }
 
   return html;
@@ -124,44 +117,38 @@ void parse(const string& url) {
   if (node != NULL)
     cout << node.child_value() << "\n\n";
 
-  string text, item_type;
-  pugi::xpath_node_set days = doc.select_nodes("/html/body/main/div/div/div/article\
-/ul/li");
-  pugi::xpath_node_set items, time_place;
+  string text;
+  pugi::xpath_node_set items, tp,
+    days = doc.select_nodes("/html/body/main/div/div/div/article/ul/li");
 
-  pugi::xpath_node_set::const_iterator day = days.begin();
-  pugi::xpath_node_set::const_iterator item;
-
-  for (; day != days.end(); ++day) {
-    text = day->node().select_node("div/div/span").node().child_value();
+  for (const auto& day : days) {
+    text = day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
     cout << text << endl;
-    items = day->node().select_nodes("div/div/div");
-    item = items.begin();
-    for (; item != items.end(); ++item) {
-      text = item->node().select_node("div/p").node().child_value();
+    items = day.node().select_nodes("div/div/div");
+    for (const auto& item : items) {
+      text = item.node().select_node("div/p").node().child_value();
       boost::algorithm::trim(text);
       cout << text;
-      if (item->node().select_node("div/p/span/span") != NULL) {
-        text = item->node().select_node("div/p/span").node().child_value();
+      if (item.node().select_node("div/p/span/span") != NULL) {
+        text = item.node().select_node("div/p/span").node().child_value();
         boost::algorithm::trim(text);
         cout << ' ' << text;
-        item_type = item->node().select_node("div/p/span/span").node().child_value();
+        text = item.node().select_node("div/p/span/span").node().child_value();
       }
       else
-        item_type = item->node().select_node("div/p/span").node().child_value();
-      boost::algorithm::trim(item_type);
-      cout << " [" + item_type + ']' << endl;
+        text = item.node().select_node("div/p/span").node().child_value();
+      boost::algorithm::trim(text);
+      cout << " [" + text + ']' << endl;
 
-      time_place = item->node().select_nodes("ul/li");
-      for (size_t i = 0; i < time_place.size(); i++) {
-        auto c = time_place[i].node().first_child().name();
-        if (time_place[i].node().first_child().name() != string("a"))
-          cout << time_place[i].node().child_value();
+      tp = item.node().select_nodes("ul/li");
+      for (const auto& time_place : tp) {
+        if (time_place.node().first_child().name() != string("a"))
+          cout << time_place.node().child_value();
         else
-          cout << time_place[i].node().first_child().child_value();
+          cout << time_place.node().first_child().child_value();
 
-        if (i < time_place.size() - 1)
+        if (time_place != tp.end()->node())
           cout << " / ";
       }
       cout << endl;
@@ -170,135 +157,62 @@ void parse(const string& url) {
   }
 }
 
-vector<string> parse_group(const string& url, const unsigned char& dep, 
-                          const unsigned char& course, const bool print = false) {
-  vector<string> group_names;
-
+void parse_group(Params& p) {
   pugi::xml_document doc;
-  if (exists(current_path().u8string() + "\\" + 
-      to_string(+dep) + '-' + to_string(+course) + ".xml")) {
+  if (exists(current_path().u8string() + "\\" + p.filename)) {
     cout << "Загружаю список групп из кэша\n\n";
-    doc.load_file(string(to_string(+dep) + '-' +
-                         to_string(+course) + ".xml").c_str());
+    doc.load_file(p.filename.c_str());
   }
   else {
-    doc.load_string(proceedHTML(fetchURL(url)).c_str());
-    doc.save_file(string(to_string(+dep) + '-' +
-                         to_string(+course) + ".xml").c_str());
+    doc.load_string(proceedHTML(fetchURL(group_url(p))).c_str());
+    doc.save_file(p.filename.c_str());
   }
 
   string text;
-  pugi::xpath_node_set groups = doc.select_nodes("/html/body/main/div/div/div/article\
-/div/div");
-
-  pugi::xpath_node_set::const_iterator group = groups.begin(), node;
-  pugi::xpath_node_set nodes;
+  pugi::xpath_node_set nodes,
+    groups = doc.select_nodes("/html/body/main/div/div/div/article/div/div");
 
   unsigned i = 1;
-  for (; group != groups.end(); ++group) {
-    nodes = group->node().select_nodes("a");
-    node = nodes.begin();
-    for (; node != nodes.end(); ++node) {
-      text = node->node().child_value();
-      if (print)
+  for (const auto& group : groups) {
+    nodes = group.node().select_nodes("a");
+    for (const auto& node : nodes) {
+      text = node.node().child_value();
+      if ((p.list || !p.group))
         cout << setw(2) << i++ << ") " << text << endl;
-      group_names.push_back(text);
+      p.group_names.push_back(text);
     }
   }
-  return group_names;
-}
-
-void printUsage() {
-  cout << "TimeTable.exe {Институт} {Курс} [Номер группы из списка] \
-[номер недели 1-18]\n";
-  cout << "TimeTable.exe {Институт} {Курс} --list\n";
-  cout << "TimeTable.exe --clear\n\n";
-  cout << "  --list  - Показать только список групп\n";
-  cout << "  --clear - Очистить весь кэш\n";
-  exit(1);
-}
-
-const string base_url(const string& group) {
-  return "http://mai.ru/education/studies/schedule/index.php?group="
-    + group;
-}
-
-const string week_url(const string& group,
-  const unsigned char& week) {
-  return "http://mai.ru/education/studies/schedule/index.php?group="
-    + group + "&week=" + to_string(+week);
-}
-
-const string group_url(const unsigned char& dep,
-  const unsigned char& course) {
-  return "https://mai.ru/education/studies/schedule/groups.php?department=Институт+№"
-    + to_string(+dep) + "&course=" + to_string(+course);
 }
 
 int main(int argc, char* argv[]) {
-  if (argc == 2 && !strcmp(argv[1], "--clear")) {
-    unsigned cnt{ 0 };
-    for (const auto& file : directory_iterator("./")) {
-      if (file.path().extension() == ".xml") {
-        cout << file.path().filename().u8string() << endl;
-        remove(file.path());
-        cnt++;
-      }
-    }
-    cout << "Удалено файлов: " << cnt << endl;
-    return 0;
-  }
-  else if (argc < 2 || argc > 5)
-    printUsage();
-
   try {
-    unsigned char dep = stoi(argv[1]), course = stoi(argv[2]);
-    if (dep > 12 || dep == 0 ||
-        course > 6 || course == 0)
-      printUsage();
+    Params p(argc, argv);
 
-    vector<string> group_names;
-
-    if (argc == 3) {
-      unsigned group = 0;
-      group_names = parse_group(group_url(dep, course), dep, course, true);
-      while (group == 0 || group > group_names.size()) {
-        cout << "Введите номер группы: ";
-        while (!(cin >> group)) {
-          cout << "Введите номер группы: ";
-          cin.clear();
-          cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
+    if (p.clear) {
+      unsigned cnt{ 0 };
+      for (const auto& file : directory_iterator("./")) {
+        if (file.path().extension() == ".xml") {
+          cout << file.path().filename().u8string() << endl;
+          remove(file.path());
+          cnt++;
         }
       }
-       parse(base_url(group_names[group - 1]));
+      cout << "Удалено файлов: " << cnt << endl;
     }
-    else if (argc == 4 || argc == 5) {
-      if (argc == 4) {
-        if (strcmp(argv[3], "--list")) {
-          unsigned group = stoi(argv[3]);
-          group_names = parse_group(group_url(dep, course), dep, course);
-
-          if (group <= group_names.size() && group != 0)
-            parse(base_url(group_names[group - 1]));
-          else
-            throw "Такого номера группы не существует";
-        }
-        else
-          parse_group(group_url(dep, course), dep, course, true);
+    else if (p.list)
+      return 0;
+    else if (p.group && p.week) 
+      parse(week_url(p));
+    else if (p.group && !p.week)
+      parse(base_url(p));
+    else {
+      cout << "Введите номер группы: ";
+      while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
+        cout << "Введите номер группы: ";
+        cin.clear();
+        cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
       }
-      else if (argc == 5) {
-        unsigned group = stoi(argv[3]);
-        unsigned char week = stoi(argv[4]);
-        if (week > 18 || week == 0)
-          printUsage();
-
-        group_names = parse_group(group_url(dep, course), dep, course);
-
-        if (group <= group_names.size() && group != 0)
-          parse(week_url(group_names[group - 1], week));
-        else
-          throw "Такого номера группы не существует";
-      }
+      parse(base_url(p));
     }
   }
   catch (bad_alloc const&) {
@@ -310,6 +224,5 @@ int main(int argc, char* argv[]) {
   catch (const char* e) {
     cerr << e << endl;
   }
-
   return 0;
 }
