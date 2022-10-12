@@ -31,50 +31,29 @@ struct week_predicate {
 };
 
 const string proceedHTML(string html) {
-  size_t p1 = html.find("<head"),
-    p2 = html.find("</head>");
-  html.erase(p1, p2 + 7 - p1);
+  const string block[] = { "head", "section",
+    "header", "script", "form" };
+  size_t p1, p2;
 
-  p1 = html.find("<section");
-  p2 = html.find("</section>");
-  html.erase(p1, p2 + 10 - p1);
-
-  p1 = html.find("<header");
-  p2 = html.find("</header>");
-  html.erase(p1, p2 + 9 - p1);
-
-  p1 = html.find("<script");
-  p2 = html.find("</script>");
-  while (p1 != string::npos && p2 != string::npos) {
-    html.erase(p1, p2 + 9 - p1);
-    p1 = html.find("<script");
-    p2 = html.find("</script>");
+  for (const auto& x : block) {
+    p1 = html.find("<" + x);
+    p2 = html.find("</" + x + ">");
+    while (p1 != string::npos && p2 != string::npos) {
+      html.erase(p1, p2 + x.length() + 3 - p1);
+      p1 = html.find("<" + x);
+      p2 = html.find("</" + x + ">");
+    }
   }
 
-  p1 = html.find("<form");
-  p2 = html.find("</form>");
-  while (p1 != string::npos && p2 != string::npos) {
-    html.erase(p1, p2 + 7 - p1);
-    p1 = html.find("<form");
-    p2 = html.find("</form>");
-  }
+  const vector<string> single = { "</h5>", "&nbsp;", "&ndash;" };
+  const string new_single[] = { " ", " ", "-" };
 
-  p1 = html.find("</h5>");
-  while (p1 != string::npos) {
-    html.erase(p1, 5);
-    p1 = html.find("</h5>");
-  }
-
-  p1 = html.find("&nbsp;");
-  while (p1 != string::npos) {
-    html.replace(p1, 6, " ", 1);
-    p1 = html.find("&nbsp;");
-  }
-
-  p1 = html.find("&ndash;");
-  while (p1 != string::npos) {
-    html.replace(p1, 7, "-", 1);
-    p1 = html.find("&ndash;");
+  for (size_t i = 0; i < single.size(); i++) {
+    p1 = html.find(single[i]);
+    while (p1 != string::npos) {
+      html.replace(p1, single[i].length(), new_single[i].c_str(), 1);
+      p1 = html.find(single[i]);
+    }
   }
 
   return html;
@@ -124,44 +103,38 @@ void parse(const string& url) {
   if (node != NULL)
     cout << node.child_value() << "\n\n";
 
-  string text, item_type;
-  pugi::xpath_node_set days = doc.select_nodes("/html/body/main/div/div/div/article\
-/ul/li");
-  pugi::xpath_node_set items, time_place;
+  string text;
+  pugi::xpath_node_set items, tp,
+    days = doc.select_nodes("/html/body/main/div/div/div/article/ul/li");
 
-  pugi::xpath_node_set::const_iterator day = days.begin();
-  pugi::xpath_node_set::const_iterator item;
-
-  for (; day != days.end(); ++day) {
-    text = day->node().select_node("div/div/span").node().child_value();
+  for (const auto& day : days) {
+    text = day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
     cout << text << endl;
-    items = day->node().select_nodes("div/div/div");
-    item = items.begin();
-    for (; item != items.end(); ++item) {
-      text = item->node().select_node("div/p").node().child_value();
+    items = day.node().select_nodes("div/div/div");
+    for (const auto& item : items) {
+      text = item.node().select_node("div/p").node().child_value();
       boost::algorithm::trim(text);
       cout << text;
-      if (item->node().select_node("div/p/span/span") != NULL) {
-        text = item->node().select_node("div/p/span").node().child_value();
+      if (item.node().select_node("div/p/span/span") != NULL) {
+        text = item.node().select_node("div/p/span").node().child_value();
         boost::algorithm::trim(text);
         cout << ' ' << text;
-        item_type = item->node().select_node("div/p/span/span").node().child_value();
+        text = item.node().select_node("div/p/span/span").node().child_value();
       }
       else
-        item_type = item->node().select_node("div/p/span").node().child_value();
-      boost::algorithm::trim(item_type);
-      cout << " [" + item_type + ']' << endl;
+        text = item.node().select_node("div/p/span").node().child_value();
+      boost::algorithm::trim(text);
+      cout << " [" + text + ']' << endl;
 
-      time_place = item->node().select_nodes("ul/li");
-      for (size_t i = 0; i < time_place.size(); i++) {
-        auto c = time_place[i].node().first_child().name();
-        if (time_place[i].node().first_child().name() != string("a"))
-          cout << time_place[i].node().child_value();
+      tp = item.node().select_nodes("ul/li");
+      for (const auto& time_place : tp) {
+        if (time_place.node().first_child().name() != string("a"))
+          cout << time_place.node().child_value();
         else
-          cout << time_place[i].node().first_child().child_value();
+          cout << time_place.node().first_child().child_value();
 
-        if (i < time_place.size() - 1)
+        if (time_place != tp.end()->node())
           cout << " / ";
       }
       cout << endl;
@@ -175,31 +148,26 @@ vector<string> parse_group(const string& url, const unsigned char& dep,
   vector<string> group_names;
 
   pugi::xml_document doc;
-  if (exists(current_path().u8string() + "\\" + 
-      to_string(+dep) + '-' + to_string(+course) + ".xml")) {
+  const string filename = to_string(+dep) + '-' +
+    to_string(+course) + ".xml";
+  if (exists(current_path().u8string() + "\\" + filename)) {
     cout << "Загружаю список групп из кэша\n\n";
-    doc.load_file(string(to_string(+dep) + '-' +
-                         to_string(+course) + ".xml").c_str());
+    doc.load_file(filename.c_str());
   }
   else {
     doc.load_string(proceedHTML(fetchURL(url)).c_str());
-    doc.save_file(string(to_string(+dep) + '-' +
-                         to_string(+course) + ".xml").c_str());
+    doc.save_file(filename.c_str());
   }
 
   string text;
-  pugi::xpath_node_set groups = doc.select_nodes("/html/body/main/div/div/div/article\
-/div/div");
-
-  pugi::xpath_node_set::const_iterator group = groups.begin(), node;
-  pugi::xpath_node_set nodes;
+  pugi::xpath_node_set nodes,
+    groups = doc.select_nodes("/html/body/main/div/div/div/article/div/div");
 
   unsigned i = 1;
-  for (; group != groups.end(); ++group) {
-    nodes = group->node().select_nodes("a");
-    node = nodes.begin();
-    for (; node != nodes.end(); ++node) {
-      text = node->node().child_value();
+  for (const auto& group : groups) {
+    nodes = group.node().select_nodes("a");
+    for (const auto& node : nodes) {
+      text = node.node().child_value();
       if (print)
         cout << setw(2) << i++ << ") " << text << endl;
       group_names.push_back(text);
