@@ -108,25 +108,24 @@ Gecko/20070725 Firefox/2.0.0.6");
 }
 
 void parse(const string& url) {
-  pugi::xml_document doc;
-  doc.load_string(proceedHTML(fetchURL(url)).c_str());
-  auto node = doc.find_node(group_predicate());
+  pugi::xml_document* doc = new pugi::xml_document();
+  doc->load_string(proceedHTML(fetchURL(url)).c_str());
+  auto node = doc->find_node(group_predicate());
   cout << node.child_value() << "\n\n";
 
-  node = doc.find_node(week_predicate());
+  node = doc->find_node(week_predicate());
   if (node != NULL)
     cout << node.child_value() << "\n\n";
 
   string text;
-  pugi::xpath_node_set items, tp,
-    days = doc.select_nodes("/html/body/main/div/div/div/article/ul/li");
+  pugi::xpath_node_set tp,
+    days = doc->select_nodes("/html/body/main/div/div/div/article/ul/li");
 
   for (const auto& day : days) {
     text = day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
     cout << text << endl;
-    items = day.node().select_nodes("div/div/div");
-    for (const auto& item : items) {
+    for (const auto& item : day.node().select_nodes("div/div/div")) {
       text = item.node().select_node("div/p").node().child_value();
       boost::algorithm::trim(text);
       cout << text;
@@ -155,33 +154,37 @@ void parse(const string& url) {
     }
     cout << endl;
   }
+
+  delete doc;
 }
 
-void parse_group(Params& p) {
-  pugi::xml_document doc;
+void parse_group(Params& p, const bool isPrint) {
+  pugi::xml_document *doc = new pugi::xml_document();
   if (exists(current_path().u8string() + "\\" + p.filename)) {
     cout << "Загружаю список групп из кэша\n\n";
-    doc.load_file(p.filename.c_str());
+    doc->load_file(p.filename.c_str());
   }
   else {
-    doc.load_string(proceedHTML(fetchURL(group_url(p))).c_str());
-    doc.save_file(p.filename.c_str());
+    doc->load_string(proceedHTML(fetchURL(group_url(p))).c_str());
+    doc->save_file(p.filename.c_str());
   }
 
   string text;
   pugi::xpath_node_set nodes,
-    groups = doc.select_nodes("/html/body/main/div/div/div/article/div/div");
+    groups = doc->select_nodes("/html/body/main/div/div/div/article/div/div");
 
   unsigned i = 1;
   for (const auto& group : groups) {
     nodes = group.node().select_nodes("a");
     for (const auto& node : nodes) {
       text = node.node().child_value();
-      if ((p.list || !p.group))
+      if (isPrint)
         cout << setw(2) << i++ << ") " << text << endl;
       p.group_names.push_back(text);
     }
   }
+
+  delete doc;
 }
 
 int main(int argc, char* argv[]) {

@@ -15,6 +15,6 @@ struct Params {
   Params() {}
   Params(int argc, char* argv[]);
   static void printHelp();
-  friend void parse_group(Params& p);
+  friend void parse_group(Params& p, const bool isPrint);
 };
 

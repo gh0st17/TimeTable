@@ -16,9 +16,19 @@ Params::Params(int argc, char* argv[]) {
     for (size_t i = 3; i < argc; i++) {
       param = string(argv[i]);
       if (param == "--group" || param == "-g")
-        group = stoi(argv[++i]);
-      else if (param == "--week" || param == "-w")
-        week = stoi(argv[++i]);
+        if (i + 1 < argc)
+          group = stoi(argv[++i]);
+        else
+          throw "Номер группы пропущен";
+      else if (param == "--week" || param == "-w") {
+        if (i + 1 < argc) {
+          week = stoi(argv[++i]);
+          if ((!week || week > 18) && !list && !clear)
+            throw "Такой недели не существует";
+        }
+        else
+          throw "Номер недели пропущен";
+      }
       else if (param == "--list" || param == "-l")
         list = true;
       else if (param == "--clear" || param == "-c") {
@@ -26,17 +36,15 @@ Params::Params(int argc, char* argv[]) {
         return;
       }
       else
-        throw ("Unknown parameter " + param).c_str();
+        throw ("Неизвестный параметр " + param).c_str();
     }
 
-    parse_group(*this);
+    parse_group(*this, false);
 
     if ((!group || group > group_names.size()) && !list && !clear)
-      throw "Такого номера группы не существует";
-    if ((!week || week > 18) && !list && !clear)
-      throw "Такой недели не существует";
+      throw "Номер группы не существует или не задан";
   } else
-    parse_group(*this);
+    parse_group(*this, true);
 }
 
 void Params::printHelp() {
