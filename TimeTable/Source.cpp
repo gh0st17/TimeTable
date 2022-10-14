@@ -2,7 +2,6 @@
 
 using namespace std;
 
-
 int main(int argc, char* argv[]) {
   Manager m(argc, argv);
   return 0;

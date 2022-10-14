@@ -42,8 +42,8 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       throw ("Неизвестный параметр " + param).c_str();
   }
 
-  if ((!group || group > group_names.size()) && !list && !clear)
-    throw "Номер группы не существует или не задан";
+  if (argc > 3 && (!group || group > group_names.size()) && !list && !clear)
+    throw "Номер группы не существует";
 }
 
 

@@ -49,6 +49,17 @@ Gecko/20070725 Firefox/2.0.0.6");
   }
 }
 
+bool Parser::group_predicate::operator()(pugi::xml_node node) const {
+  return !strcmp(node.name(), "h1") &&
+    !strcmp(node.first_attribute().value(), "mb-5");
+}
+
+bool Parser::week_predicate::operator()(pugi::xml_node node) const {
+  return !strcmp(node.name(), "h3") &&
+    !strcmp(node.first_attribute().value(),
+      "me-5 mb-2 fw-medium");
+}
+
 const string Parser::prepareHTML(string html) {
   const string block[] = { "head", "section",
     "header", "script", "form" };
@@ -80,7 +91,7 @@ const string Parser::prepareHTML(string html) {
 
 void Parser::parse(const Params& p, const string& url) {
   pugi::xml_document* doc = new pugi::xml_document();
-  string* buffer;
+  string* buffer = new string();
   fetchURL(url, buffer);
   doc->load_string(prepareHTML(*buffer).c_str());
 
@@ -135,17 +146,17 @@ void Parser::parse(const Params& p, const string& url) {
 
 void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   pugi::xml_document* doc = new pugi::xml_document();
-  string* buffer = new string();
 
   if (exists(current_path().u8string() + "\\" + p.filename)) {
     cout << "Загружаю список групп из кэша\n\n";
     doc->load_file(p.filename.c_str());
   }
   else {
-    string* buffer;
+    string* buffer = new string();
     fetchURL(url, buffer);
     doc->load_string(prepareHTML(*buffer).c_str());
     doc->save_file(p.filename.c_str());
+    delete buffer;
   }
 
   string text;
@@ -164,5 +175,4 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   }
 
   delete doc;
-  delete buffer;
 }

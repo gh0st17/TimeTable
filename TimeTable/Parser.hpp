@@ -8,18 +8,11 @@
 class Parser {
 private:
   struct group_predicate {
-    bool operator()(pugi::xml_node node) const {
-      return !strcmp(node.name(), "h1") &&
-        !strcmp(node.first_attribute().value(), "mb-5");
-    }
+    bool operator()(pugi::xml_node node) const;
   };
 
   struct week_predicate {
-    bool operator()(pugi::xml_node node) const {
-      return !strcmp(node.name(), "h3") &&
-        !strcmp(node.first_attribute().value(),
-          "me-5 mb-2 fw-medium");
-    }
+    bool operator()(pugi::xml_node node) const;
   };
 
 public:
