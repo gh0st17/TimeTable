@@ -12,6 +12,7 @@ class Manager {
 private:
   Params p;
   Parser parser;
+  TimeTable tt;
   const string base_url = "http://mai.ru/education/studies/schedule/";
 
   const string today_url();
@@ -20,4 +21,8 @@ private:
 
 public:
   Manager(int& argc, char* argv[]);
+
+  void run();
+  void printTimeTable();
+  void writeIcsTimeTable();
 };

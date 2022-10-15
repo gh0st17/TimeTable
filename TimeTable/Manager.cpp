@@ -16,16 +16,29 @@ const string Manager::group_url() {
 }
 
 Manager::Manager(int& argc, char* argv[]) {
-  p.checkArgc(argc);
-  p = Params(argv[1], argv[2]);
   try {
+    p.checkArgc(argc);
+    p = Params(argv[1], argv[2]);
     if (argc > 3)
       parser.parse_group(p, group_url(), false);
     else
       parser.parse_group(p, group_url(), true);
 
     p = Params(p, argc, argv);
+  }
+  catch (bad_alloc const&) {
+    cerr << "Ошибка выделения памяти\n";
+  }
+  catch (const exception& e) {
+    cerr << e.what() << endl;
+  }
+  catch (const char* e) {
+    cerr << e << endl;
+  }
+}
 
+void Manager::run() {
+  try {
     if (p.clear) {
       unsigned cnt{ 0 };
       for (const auto& file : directory_iterator("./")) {
@@ -40,9 +53,9 @@ Manager::Manager(int& argc, char* argv[]) {
     else if (p.list)
       return;
     else if (p.group && p.week)
-      parser.parse(p, week_url());
+      tt = parser.parse(p, week_url());
     else if (p.group && !p.week)
-      parser.parse(p, today_url());
+      tt = parser.parse(p, today_url());
     else {
       cout << "Введите номер группы: ";
       while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
@@ -50,7 +63,7 @@ Manager::Manager(int& argc, char* argv[]) {
         cin.clear();
         cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
       }
-      parser.parse(p, today_url());
+      tt = parser.parse(p, today_url());
     }
   }
   catch (bad_alloc const&) {
@@ -62,4 +75,12 @@ Manager::Manager(int& argc, char* argv[]) {
   catch (const char* e) {
     cerr << e << endl;
   }
+}
+
+void Manager::printTimeTable() {
+
+}
+
+void Manager::writeIcsTimeTable() {
+
 }

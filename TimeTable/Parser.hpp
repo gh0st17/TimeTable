@@ -20,8 +20,14 @@ struct Item {
 };
 
 struct Day {
-  std::vector<Item> items;
   date date = day_clock::local_day();
+  std::vector<Item> items;
+};
+
+struct TimeTable {
+  unsigned short week{ 0 };
+  std::vector<Day> days;
+  std::string group;
 };
 
 class Parser {
@@ -36,12 +42,14 @@ private:
 
   const std::map<std::string, std::string> month = { {"января", "01"}, {"февраля", "02"},
     {"марта", "03"}, {"апреля", "04"}, {"мая", "05"}, {"июня", "06"}, {"июля", "07"},
-    {"августа", "08"}, {"сентября", "09"}, {"октября", "10"}, {"ноября", "10"}, {"декабря", "12"} };
+    {"августа", "08"}, {"сентября", "09"}, {"октября", "10"}, {"ноября", "11"}, {"декабря", "12"} };
+
+  void prepareHTML(std::string* html);
+
 public:
   Parser() {};
 
-  const std::string prepareHTML(std::string html);
-  void parse(const Params& p,const std::string& url);
+  TimeTable parse(const Params& p, const std::string& url);
   void parse_group(Params& p, const std::string& url, const bool isPrint);
 };
 

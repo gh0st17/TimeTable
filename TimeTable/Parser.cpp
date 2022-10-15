@@ -60,18 +60,18 @@ bool Parser::week_predicate::operator()(pugi::xml_node node) const {
       "me-5 mb-2 fw-medium");
 }
 
-const string Parser::prepareHTML(string html) {
+void Parser::prepareHTML(string* html) {
   const string block[] = { "head", "section",
     "header", "script", "form" };
   size_t p1, p2;
 
   for (const auto& x : block) {
-    p1 = html.find("<" + x);
-    p2 = html.find("</" + x + ">");
+    p1 = html->find("<" + x);
+    p2 = html->find("</" + x + ">");
     while (p1 != string::npos && p2 != string::npos) {
-      html.erase(p1, p2 + x.length() + 3 - p1);
-      p1 = html.find("<" + x);
-      p2 = html.find("</" + x + ">");
+      html->erase(p1, p2 + x.length() + 3 - p1);
+      p1 = html->find("<" + x);
+      p2 = html->find("</" + x + ">");
     }
   }
 
@@ -79,21 +79,21 @@ const string Parser::prepareHTML(string html) {
   const string new_single[] = { " ", " ", "-" };
 
   for (size_t i = 0; i < single.size(); i++) {
-    p1 = html.find(single[i]);
+    p1 = html->find(single[i]);
     while (p1 != string::npos) {
-      html.replace(p1, single[i].length(), new_single[i].c_str(), 1);
-      p1 = html.find(single[i]);
+      html->replace(p1, single[i].length(), new_single[i].c_str(), 1);
+      p1 = html->find(single[i]);
     }
   }
-
-  return html;
 }
 
-void Parser::parse(const Params& p, const string& url) {
+TimeTable Parser::parse(const Params& p, const string& url) {
+  TimeTable tt;
   pugi::xml_document* doc = new pugi::xml_document();
   string* buffer = new string();
   fetchURL(url, buffer);
-  doc->load_string(prepareHTML(*buffer).c_str());
+  prepareHTML(buffer);
+  doc->load_string(buffer->c_str());
 
   auto node = doc->find_node(group_predicate());
   cout << node.child_value() << "\n\n";
@@ -103,9 +103,9 @@ void Parser::parse(const Params& p, const string& url) {
     cout << node.child_value() << "\n\n";
 
   string text;
+  size_t tp_size;
   pugi::xpath_node_set tp,
     days = doc->select_nodes("/html/body/main/div/div/div/article/ul/li");
-
   for (const auto& day : days) {
     text = day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
@@ -126,13 +126,14 @@ void Parser::parse(const Params& p, const string& url) {
       cout << " [" + text + ']' << endl;
 
       tp = item.node().select_nodes("ul/li");
-      for (const auto& time_place : tp) {
-        if (time_place.node().first_child().name() != string("a"))
-          cout << time_place.node().child_value();
+      tp_size = tp.size();
+      for (size_t i = 0; i < tp_size; i++) {
+        if (tp[i].node().first_child().name() != string("a"))
+          cout << tp[i].node().child_value();
         else
-          cout << time_place.node().first_child().child_value();
+          cout << tp[i].node().first_child().child_value();
 
-        if (time_place != tp.end()->node())
+        if (i < tp_size - 1)
           cout << " / ";
       }
       cout << endl;
@@ -142,19 +143,21 @@ void Parser::parse(const Params& p, const string& url) {
 
   delete doc;
   delete buffer;
+  return tt;
 }
 
 void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   pugi::xml_document* doc = new pugi::xml_document();
 
   if (exists(current_path().u8string() + "\\" + p.filename)) {
-    cout << "Загружаю список групп из кэша\n\n";
+    cout << "Использую список групп из кэша\n\n";
     doc->load_file(p.filename.c_str());
   }
   else {
     string* buffer = new string();
     fetchURL(url, buffer);
-    doc->load_string(prepareHTML(*buffer).c_str());
+    prepareHTML(buffer);
+    doc->load_string(buffer->c_str());
     doc->save_file(p.filename.c_str());
     delete buffer;
   }
