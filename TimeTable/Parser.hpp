@@ -14,8 +14,8 @@ using namespace boost::gregorian;
 using namespace boost::posix_time;
 
 struct Item {
-  std::vector<std::string> educator;
-  std::vector<std::string> place;
+  std::vector<std::string> educators;
+  std::vector<std::string> places;
   std::string item_type;
   std::string name;
   ptime time;

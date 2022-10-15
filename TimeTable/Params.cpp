@@ -53,14 +53,14 @@ void Params::checkArgc(int& argc) {
 }
 
 void Params::printHelp() {
-  cout << "TimeTable.exe {Институт} {Курс} --group <Число> --week <Число>\n";
-  cout << "TimeTable.exe {Институт} {Курс} --list\n";
-  cout << "TimeTable.exe --clear\n\n";
-  cout << "  Институт - Номер института от 1 до 12\n";
-  cout << "  Курс     - Номер курса от 1 до 6\n";
-  cout << "  --group, - Номер группы из списка\n  -g\n";
-  cout << "  --week,  - Номер недели от 1 до 18\n  -w\n";
-  cout << "  --list,  - Показать только список групп\n  -l\n";
-  cout << "  --clear, - Очистить весь кэш\n  -c\n";
+  cout << "TimeTable.exe {Институт} {Курс} --group <Число> --week <Число>\n" <<
+    "TimeTable.exe {Институт} {Курс} --list\n" <<
+    "TimeTable.exe --clear\n\n" <<
+    "  Институт - Номер института от 1 до 12\n" <<
+    "  Курс     - Номер курса от 1 до 6\n" <<
+    "  --group, - Номер группы из списка\n  -g\n" <<
+    "  --week,  - Номер недели от 1 до 18\n  -w\n" <<
+    "  --list,  - Показать только список групп\n  -l\n" <<
+    "  --clear, - Очистить весь кэш\n  -c\n";
   exit(1);
 }

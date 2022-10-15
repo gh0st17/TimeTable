@@ -15,6 +15,22 @@ const string Manager::group_url() {
     + to_string(p.dep) + "&course=" + to_string(p.course);
 }
 
+const string Manager::getTimeString(const time_duration& td) {
+  stringstream ss;
+
+  if (td.hours() > 9)
+    ss << td.hours();
+  else
+    ss << "0" << td.hours();
+
+  if (td.minutes() > 9)
+    ss << ':' << td.minutes();
+  else
+    ss << ':' << "0" << td.minutes();
+
+  return ss.str();
+}
+
 Manager::Manager(int& argc, char* argv[]) {
   try {
     p.checkArgc(argc);
@@ -35,9 +51,19 @@ Manager::Manager(int& argc, char* argv[]) {
   catch (const char* e) {
     cerr << e << endl;
   }
+
+  cout.imbue(locale(locale::classic(), russian_facet));
+  date_facet::input_collection_type short_weekdays, long_month;
+  copy(&short_weekday_names[0], &short_weekday_names[7],
+    back_inserter(short_weekdays));
+  copy(&long_month_names[0], &long_month_names[11],
+    back_inserter(long_month));
+  russian_facet->short_weekday_names(short_weekdays);
+  russian_facet->long_month_names(long_month);
+  russian_facet->format("%a, %d %B");
 }
 
-void Manager::run() {
+void Manager::getTimeTable() {
   try {
     if (p.clear) {
       unsigned cnt{ 0 };
@@ -78,7 +104,31 @@ void Manager::run() {
 }
 
 void Manager::printTimeTable() {
+  cout << tt.group << "\n\n";
 
+  if (tt.week)
+    cout << "Учебная неделя №" << tt.week << "\n\n";
+
+  for (const auto& day : tt.days) {
+    cout << day.date << endl;
+    for (const auto& item : day.items) {
+      cout << item.name << " [" << item.item_type <<
+        "]\n" << getTimeString(item.time.time_of_day()) <<
+        " - " << getTimeString((item.time + minutes(90)).time_of_day()) << " / ";
+
+      if (item.educators.size())
+        for (const auto& educator : item.educators)
+          cout << educator << " / ";
+
+      for (const auto& place : item.places) {
+        cout << place;
+        if (place != item.places.back())
+          cout << " / ";
+      }
+      cout << endl;
+    }
+    cout << endl;
+  }
 }
 
 void Manager::writeIcsTimeTable() {

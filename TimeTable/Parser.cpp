@@ -151,7 +151,7 @@ TimeTable Parser::parse(const Params& p, const string& url) {
           text = tp[i].node().child_value(); // otherwise
         else {
           text = tp[i].node().first_child().child_value(); // prepod
-          item.educator.push_back(text);
+          item.educators.push_back(text);
           continue;
         }
 
@@ -162,7 +162,7 @@ TimeTable Parser::parse(const Params& p, const string& url) {
           item.time = ptime(day.date, hours(h) + minutes(m));
         }
         else
-          item.place.push_back(text);
+          item.places.push_back(text);
       }
       
       day.items.push_back(item);

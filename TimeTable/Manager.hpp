@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <iostream>
+#include <sstream>
 #include <limits>
 
 #include "Params.hpp"
@@ -15,14 +16,25 @@ private:
   TimeTable tt;
   const string base_url = "http://mai.ru/education/studies/schedule/";
 
+  const char* const short_weekday_names[8] = {
+    "Вс", "Пн", "Вт","Ср", "Чт", "Пт", "Сб", "Сб"
+  };
+  const char* const long_month_names[12] = {
+    "января", "февраля", "марта","апреля", "мая",
+    "июня", "июля", "августа", "сентября", "октября",
+    "ноября", "декабря"
+  };
+  date_facet* russian_facet = new date_facet();
+
   const string today_url();
   const string  week_url();
   const string group_url();
+  const string getTimeString(const time_duration& td);
 
 public:
   Manager(int& argc, char* argv[]);
 
-  void run();
+  void getTimeTable();
   void printTimeTable();
   void writeIcsTimeTable();
 };
