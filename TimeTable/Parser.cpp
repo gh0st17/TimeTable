@@ -87,8 +87,25 @@ void Parser::prepareHTML(string* html) {
   }
 }
 
+const string Parser::matchRegex(const string str, const regex r, const size_t n) {
+  string::const_iterator strBegin(str.cbegin());
+  smatch match;
+  size_t i = 0;
+  while (i++ < n && regex_search(strBegin, str.cend(), match, r)) {
+    if (match.size() > 1)
+      return match[n - 1];
+
+    strBegin = match.suffix().first;
+  }
+  return match[0];
+}
+
 TimeTable Parser::parse(const Params& p, const string& url) {
   TimeTable tt;
+  string text;
+  Item item;
+  Day day;
+
   pugi::xml_document* doc = new pugi::xml_document();
   string* buffer = new string();
   fetchURL(url, buffer);
@@ -96,49 +113,63 @@ TimeTable Parser::parse(const Params& p, const string& url) {
   doc->load_string(buffer->c_str());
 
   auto node = doc->find_node(group_predicate());
-  cout << node.child_value() << "\n\n";
+  tt.group = node.child_value();
 
   node = doc->find_node(week_predicate());
   if (node != NULL)
-    cout << node.child_value() << "\n\n";
+    tt.week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
 
-  string text;
   size_t tp_size;
   pugi::xpath_node_set tp,
-    days = doc->select_nodes("/html/body/main/div/div/div/article/ul/li");
-  for (const auto& day : days) {
-    text = day.node().select_node("div/div/span").node().child_value();
+    doc_days = doc->select_nodes("/html/body/main/div/div/div/article/ul/li");
+
+  for (const auto& doc_day : doc_days) {
+    text = doc_day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
-    cout << text << endl;
-    for (const auto& item : day.node().select_nodes("div/div/div")) {
-      text = item.node().select_node("div/p").node().child_value();
+    day.m_name = matchRegex(text, regex(R"(\s(\W+)$)"), 2);
+    day.date = date(day.date.year(), month.at(day.m_name),
+      stoi(matchRegex(text, regex(R"(\d{2})"))));
+    for (const auto& doc_item : doc_day.node().select_nodes("div/div/div")) {
+      text = doc_item.node().select_node("div/p").node().child_value();
       boost::algorithm::trim(text);
-      cout << text;
-      if (item.node().select_node("div/p/span/span") != NULL) {
-        text = item.node().select_node("div/p/span").node().child_value();
+      item.name = text;
+      if (doc_item.node().select_node("div/p/span/span") != NULL) {
+        text = doc_item.node().select_node("div/p/span").node().child_value();
         boost::algorithm::trim(text);
-        cout << ' ' << text;
-        text = item.node().select_node("div/p/span/span").node().child_value();
+        item.name += ' ' + text;
+        text = doc_item.node().select_node("div/p/span/span").node().child_value();
       }
       else
-        text = item.node().select_node("div/p/span").node().child_value();
+        text = doc_item.node().select_node("div/p/span").node().child_value();
       boost::algorithm::trim(text);
-      cout << " [" + text + ']' << endl;
+      item.item_type = text;
 
-      tp = item.node().select_nodes("ul/li");
+      tp = doc_item.node().select_nodes("ul/li");
       tp_size = tp.size();
       for (size_t i = 0; i < tp_size; i++) {
         if (tp[i].node().first_child().name() != string("a"))
-          cout << tp[i].node().child_value();
-        else
-          cout << tp[i].node().first_child().child_value();
+          text = tp[i].node().child_value(); // otherwise
+        else {
+          text = tp[i].node().first_child().child_value(); // prepod
+          item.educator.push_back(text);
+          continue;
+        }
 
-        if (i < tp_size - 1)
-          cout << " / ";
+        if (i == 0) {
+          unsigned short h = stoi(matchRegex(text, regex(R"(\d+)"))),
+            m = stoi(matchRegex(text, regex(R"(\d+)"), 2));
+
+          item.time = ptime(day.date, hours(h) + minutes(m));
+        }
+        else
+          item.place.push_back(text);
       }
-      cout << endl;
+      
+      day.items.push_back(item);
+      item = Item();
     }
-    cout << endl;
+    tt.days.push_back(day);
+    day = Day();
   }
 
   delete doc;

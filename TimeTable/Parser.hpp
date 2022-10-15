@@ -3,7 +3,9 @@
 #include <boost/algorithm/string.hpp>
 #include <pugixml.hpp>
 #include <filesystem>
+#include <algorithm>
 #include <iomanip>
+#include <regex>
 #include <map>
 
 #include "Params.hpp"
@@ -19,14 +21,19 @@ struct Item {
   ptime time;
 };
 
+typedef std::vector<Item> Items;
+
 struct Day {
   date date = day_clock::local_day();
-  std::vector<Item> items;
+  std::string m_name;
+  Items items;
 };
+
+typedef std::vector<Day> Days;
 
 struct TimeTable {
   unsigned short week{ 0 };
-  std::vector<Day> days;
+  Days days;
   std::string group;
 };
 
@@ -40,11 +47,12 @@ private:
     bool operator()(pugi::xml_node node) const;
   };
 
-  const std::map<std::string, std::string> month = { {"января", "01"}, {"февраля", "02"},
-    {"марта", "03"}, {"апреля", "04"}, {"мая", "05"}, {"июня", "06"}, {"июля", "07"},
-    {"августа", "08"}, {"сентября", "09"}, {"октября", "10"}, {"ноября", "11"}, {"декабря", "12"} };
+  const std::map<std::string, unsigned short> month = { {"января", 1}, {"февраля", 2},
+    {"марта", 3}, {"апреля", 4}, {"мая", 5}, {"июня", 6}, {"июля", 7}, {"августа", 8},
+    {"сентября", 9}, {"октября", 10}, {"ноября", 11}, {"декабря", 12} };
 
   void prepareHTML(std::string* html);
+  const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1);
 
 public:
   Parser() {};
