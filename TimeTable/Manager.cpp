@@ -44,12 +44,15 @@ Manager::Manager(int& argc, char* argv[]) {
   }
   catch (bad_alloc const&) {
     cerr << "Ошибка выделения памяти\n";
+    exit(1);
   }
   catch (const exception& e) {
     cerr << e.what() << endl;
+    exit(1);
   }
   catch (const char* e) {
     cerr << e << endl;
+    exit(1);
   }
 
   cout.imbue(locale(locale::classic(), russian_facet));
