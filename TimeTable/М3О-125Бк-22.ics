@@ -1,0 +1,250 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID : ghost17 | Alexey Sorokin
+CALSCALE : GREGORIAN
+
+BEGIN:VEVENT
+DTSTART:20221017T090000
+DTEND:20221017T103000
+SUMMARY:Линейная алгебра и аналитическая геометрия
+LOCATION:ЛК / Вестяк Анатолий Васильевич / ГУК Б-460
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221017T104500
+DTEND:20221017T121500
+SUMMARY:Введение в авиационную и ракетно-космическую технику
+LOCATION:ЛК / Зайцев Александр Владимирович / ГУК В-221
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221017T144500
+DTEND:20221017T161500
+SUMMARY:Физическая культура
+LOCATION:ПЗ / --каф.
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221019T090000
+DTEND:20221019T103000
+SUMMARY:Иностранный язык
+LOCATION:ПЗ / Жаринова Евгения Геннадьевна / Орш. А-426
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221019T104500
+DTEND:20221019T121500
+SUMMARY:Философия
+LOCATION:ЛК / Орш. А-101
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221020T104500
+DTEND:20221020T121500
+SUMMARY:Физическая культура
+LOCATION:ПЗ / --каф.
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221020T130000
+DTEND:20221020T143000
+SUMMARY:Математический анализ
+LOCATION:ПЗ / Соловьев Гариф Хусаинович / 3-417
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221020T144500
+DTEND:20221020T161500
+SUMMARY:Линейная алгебра и аналитическая геометрия
+LOCATION:ПЗ / Соловьев Гариф Хусаинович / 3-417
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221020T163000
+DTEND:20221020T180000
+SUMMARY:Инженерная и компьютерная графика
+LOCATION:ПЗ / Терещенко Виктор Петрович / Власова Елена Евгеньевна / ГУК А-722
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221021T144500
+DTEND:20221021T161500
+SUMMARY:Философия
+LOCATION:ПЗ / Орш. А-307
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221022T090000
+DTEND:20221022T103000
+SUMMARY:Математический анализ
+LOCATION:ЛК / Вестяк Анатолий Васильевич / ГУК Б-460
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221022T104500
+DTEND:20221022T121500
+SUMMARY:Информационные технологии
+LOCATION:ЛК / Чечиков Юрий Борисович / 3-Зал "А"
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221022T130000
+DTEND:20221022T143000
+SUMMARY:Информационные технологии
+LOCATION:ЛК / Чечиков Юрий Борисович / 3-Зал "А"
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221022T144500
+DTEND:20221022T161500
+SUMMARY:Дискретная математика и математическая логика
+LOCATION:ЛК / 3-Зал "А"
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221024T090000
+DTEND:20221024T103000
+SUMMARY:Линейная алгебра и аналитическая геометрия
+LOCATION:ЛК / Вестяк Анатолий Васильевич / ГУК Б-460
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221024T104500
+DTEND:20221024T121500
+SUMMARY:Введение в авиационную и ракетно-космическую технику
+LOCATION:ЛК / Зайцев Александр Владимирович / ГУК В-221
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221024T130000
+DTEND:20221024T143000
+SUMMARY:Введение в профессиональную деятельность
+LOCATION:ЛК / Офицеров Владимир Петрович / 3-Зал "А"
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221024T144500
+DTEND:20221024T161500
+SUMMARY:Физическая культура
+LOCATION:ПЗ / --каф.
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221025T104500
+DTEND:20221025T121500
+SUMMARY:Математический анализ
+LOCATION:ПЗ / Соловьев Гариф Хусаинович / 3-413
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221025T130000
+DTEND:20221025T143000
+SUMMARY:Информационные технологии
+LOCATION:ЛР / Татарникова Елена Михайловна / Секретарев Виталий Евгеньевич / 3-240б
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221025T144500
+DTEND:20221025T161500
+SUMMARY:Информационные технологии
+LOCATION:ЛР / Татарникова Елена Михайловна / Секретарев Виталий Евгеньевич / 3-240б
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221026T090000
+DTEND:20221026T103000
+SUMMARY:Иностранный язык
+LOCATION:ПЗ / Жаринова Евгения Геннадьевна / Орш. А-426
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221026T104500
+DTEND:20221026T121500
+SUMMARY:Философия
+LOCATION:ЛК / Орш. А-101
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221026T130000
+DTEND:20221026T143000
+SUMMARY:Правоведение
+LOCATION:ЛК / Бурмистрова Ирина Хазритовна / Орш. А-101
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221027T104500
+DTEND:20221027T121500
+SUMMARY:Физическая культура
+LOCATION:ПЗ / --каф.
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221027T130000
+DTEND:20221027T143000
+SUMMARY:Математический анализ
+LOCATION:ПЗ / Соловьев Гариф Хусаинович / 3-417
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221027T144500
+DTEND:20221027T161500
+SUMMARY:Линейная алгебра и аналитическая геометрия
+LOCATION:ПЗ / Соловьев Гариф Хусаинович / 3-417
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221027T163000
+DTEND:20221027T180000
+SUMMARY:Инженерная и компьютерная графика
+LOCATION:ПЗ / Терещенко Виктор Петрович / Власова Елена Евгеньевна / ГУК А-722
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221028T090000
+DTEND:20221028T103000
+SUMMARY:Дискретная математика и математическая логика
+LOCATION:ПЗ / Волков Вадим Иосифович / 3-330
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221028T104500
+DTEND:20221028T121500
+SUMMARY:Дискретная математика и математическая логика
+LOCATION:ПЗ / Волков Вадим Иосифович / 3-330
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221028T144500
+DTEND:20221028T161500
+SUMMARY:Философия
+LOCATION:ПЗ / Орш. А-307
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221028T163000
+DTEND:20221028T180000
+SUMMARY:Правоведение
+LOCATION:ПЗ / Позняков Павел Владимирович / Орш. А-304
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221029T090000
+DTEND:20221029T103000
+SUMMARY:Математический анализ
+LOCATION:ЛК / Вестяк Анатолий Васильевич / ГУК Б-460
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221029T104500
+DTEND:20221029T121500
+SUMMARY:Информационные технологии
+LOCATION:ЛК / Чечиков Юрий Борисович / 3-Зал "А"
+END:VEVENT
+
+BEGIN:VEVENT
+DTSTART:20221029T144500
+DTEND:20221029T161500
+SUMMARY:Дискретная математика и математическая логика
+LOCATION:ЛК / 3-Зал "А"
+END:VEVENT
+

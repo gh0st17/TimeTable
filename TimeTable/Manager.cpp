@@ -15,19 +15,13 @@ const string Manager::group_url() {
     + to_string(p.dep) + "&course=" + to_string(p.course);
 }
 
-const string Manager::getTimeString(const time_duration& td) {
+const string Manager::getPtimeString(const ptime& time, const char* format) {
+  static locale loc(cout.getloc(),
+    new time_facet(format));
+
   stringstream ss;
-
-  if (td.hours() > 9)
-    ss << td.hours();
-  else
-    ss << "0" << td.hours();
-
-  if (td.minutes() > 9)
-    ss << ':' << td.minutes();
-  else
-    ss << ':' << "0" << td.minutes();
-
+  ss.imbue(loc);
+  ss << time;
   return ss.str();
 }
 
@@ -115,9 +109,9 @@ void Manager::printTimeTable() {
   for (const auto& day : tt.days) {
     cout << day.date << endl;
     for (const auto& item : day.items) {
-      cout << item.name << " [" << item.item_type << "]\n" <<
-        getTimeString(item.time.time_of_day()) << " - " <<
-        getTimeString((item.time + minutes(90)).time_of_day()) << " / ";
+      cout << '[' << item.item_type << "] " << item.name << endl <<
+        getPtimeString(item.time, "%H:%M") << " - " <<
+        getPtimeString(item.time + minutes(90), "%H:%M") << " / ";
 
       if (item.educators.size())
         for (const auto& educator : item.educators)
@@ -135,5 +129,42 @@ void Manager::printTimeTable() {
 }
 
 void Manager::writeIcsTimeTable() {
+  stringstream filename;
+  filename << tt.group << "_Week_";
+  if (tt.week)
+    filename << tt.week;
+  else
+    filename << "Today";
+  filename << ".ics";
 
+  cout << "Вывод в файл " << filename.str() << endl;
+
+  ofstream ofs(filename.str());
+  ofs << "BEGIN:VCALENDAR\nVERSION:2.0\n" <<
+    "PRODID: ghost17 | Alexey Sorokin\n" <<
+    "CALSCALE: GREGORIAN\n\n";
+
+  for (const auto& day : tt.days) {
+    for (const auto& item : day.items) {
+      ofs << "BEGIN:VEVENT\nDTSTART:" <<
+        getPtimeString(item.time, "%Y%m%dT%H%M%S") << endl <<
+        "DTEND:" <<
+        getPtimeString(item.time + minutes(90), "%Y%m%dT%H%M%S") << endl <<
+        "SUMMARY:" << item.name << endl << "LOCATION:" << item.item_type <<
+        " / ";
+
+      if (item.educators.size())
+        for (const auto& educator : item.educators)
+          ofs << educator << " / ";
+
+      for (const auto& place : item.places) {
+        ofs << place;
+        if (place != item.places.back())
+          ofs << " / ";
+      }
+      ofs << "\nEND:VEVENT\n\n";
+    }
+  }
+
+  ofs.close();
 }

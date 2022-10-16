@@ -6,5 +6,6 @@ int main(int argc, char* argv[]) {
   Manager m(argc, argv);
   m.getTimeTable();
   m.printTimeTable();
+  m.writeIcsTimeTable();
   return 0;
 }

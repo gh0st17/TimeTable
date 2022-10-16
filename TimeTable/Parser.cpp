@@ -23,10 +23,9 @@ void fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
     curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "cookies.txt");
     if (proxy)
       curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
-    //curl_easy_setopt(curl, CURLOPT_PROXY, "socks5://82.115.20.234:11112");
     curl_easy_setopt(curl, CURLOPT_USERAGENT,
-      "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) \
-Gecko/20070725 Firefox/2.0.0.6");
+      "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0)\
+Gecko/20100101 Firefox/47.0");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, readBuffer);
     cout << "Загружаю страницу" << (proxy ? " через прокси" : "") << "...";

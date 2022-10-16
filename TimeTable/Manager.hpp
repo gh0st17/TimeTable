@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <limits>
 
@@ -29,7 +30,7 @@ private:
   const string today_url();
   const string  week_url();
   const string group_url();
-  const string getTimeString(const time_duration& td);
+  const string getPtimeString(const ptime& time, const char* format);
 
 public:
   Manager(int& argc, char* argv[]);
