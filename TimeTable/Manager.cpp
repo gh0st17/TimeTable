@@ -112,9 +112,9 @@ void Manager::printTimeTable() {
   for (const auto& day : tt.days) {
     cout << day.date << endl;
     for (const auto& item : day.items) {
-      cout << item.name << " [" << item.item_type <<
-        "]\n" << getTimeString(item.time.time_of_day()) <<
-        " - " << getTimeString((item.time + minutes(90)).time_of_day()) << " / ";
+      cout << item.name << " [" << item.item_type << "]\n" <<
+        getTimeString(item.time.time_of_day()) << " - " <<
+        getTimeString((item.time + minutes(90)).time_of_day()) << " / ";
 
       if (item.educators.size())
         for (const auto& educator : item.educators)

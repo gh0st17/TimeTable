@@ -32,6 +32,13 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       else
         throw "Номер недели пропущен";
     }
+    else if (param == "--proxy") {
+      if (i + 1 < argc) {
+        proxy = argv[++i];
+      }
+      else
+        throw "Адрес прокси пропущен";
+    }
     else if (param == "--list" || param == "-l")
       list = true;
     else if (param == "--clear" || param == "-c") {

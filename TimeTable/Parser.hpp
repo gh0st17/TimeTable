@@ -25,7 +25,6 @@ typedef std::vector<Item> Items;
 
 struct Day {
   date date = day_clock::local_day();
-  std::string m_name;
   Items items;
 };
 

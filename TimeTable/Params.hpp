@@ -8,7 +8,7 @@ struct Params {
     group{ 0 }, week{ 0 };
   bool list{ false }, clear{ false };
   std::vector<std::string> group_names;
-  std::string filename;
+  std::string filename, proxy;
 
   Params() {}
   Params(char* arg1, char* arg2);

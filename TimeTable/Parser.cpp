@@ -23,12 +23,13 @@ void fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
     curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "cookies.txt");
     if (proxy)
       curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
+    //curl_easy_setopt(curl, CURLOPT_PROXY, "socks5://82.115.20.234:11112");
     curl_easy_setopt(curl, CURLOPT_USERAGENT,
       "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) \
 Gecko/20070725 Firefox/2.0.0.6");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, readBuffer);
-    cout << "Загружаю страницу...";
+    cout << "Загружаю страницу" << (proxy ? " через прокси" : "") << "...";
 
     res = curl_easy_perform(curl);
     if (res == CURLE_OPERATION_TIMEDOUT)
@@ -37,7 +38,8 @@ Gecko/20070725 Firefox/2.0.0.6");
       cout << "загружено\n\n";
     else if (res == CURLE_RECV_ERROR)
       cout << "Ошибка приема данных\n\n";
-    else if (res == CURLE_SSL_CONNECT_ERROR)
+    else if (res == CURLE_SSL_CONNECT_ERROR ||
+             res == CURLE_COULDNT_CONNECT)
       cout << "Сбой при подключении\n\n";
 
     curl_easy_cleanup(curl);
@@ -102,17 +104,22 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
 
 TimeTable Parser::parse(const Params& p, const string& url) {
   TimeTable tt;
-  string text;
+  string text, m_name;
   Item item;
   Day day;
 
   pugi::xml_document* doc = new pugi::xml_document();
   string* buffer = new string();
-  fetchURL(url, buffer);
+  if (p.proxy.empty())
+    fetchURL(url, buffer);
+  else
+    fetchURL(url, buffer, p.proxy.c_str());
   prepareHTML(buffer);
   doc->load_string(buffer->c_str());
 
   auto node = doc->find_node(group_predicate());
+  if (!node)
+    throw "Ошибка в документе";
   tt.group = node.child_value();
 
   node = doc->find_node(week_predicate());
@@ -126,8 +133,8 @@ TimeTable Parser::parse(const Params& p, const string& url) {
   for (const auto& doc_day : doc_days) {
     text = doc_day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
-    day.m_name = matchRegex(text, regex(R"(\s(\W+)$)"), 2);
-    day.date = date(day.date.year(), month.at(day.m_name),
+    m_name = matchRegex(text, regex(R"(\s(\W+)$)"), 2);
+    day.date = date(day.date.year(), month.at(m_name),
       stoi(matchRegex(text, regex(R"(\d{2})"))));
     for (const auto& doc_item : doc_day.node().select_nodes("div/div/div")) {
       text = doc_item.node().select_node("div/p").node().child_value();
@@ -186,7 +193,10 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   }
   else {
     string* buffer = new string();
-    fetchURL(url, buffer);
+    if (p.proxy.empty())
+      fetchURL(url, buffer);
+    else
+      fetchURL(url, buffer, p.proxy.c_str());
     prepareHTML(buffer);
     doc->load_string(buffer->c_str());
     doc->save_file(p.filename.c_str());
