@@ -153,15 +153,21 @@ void Manager::writeIcsTimeTable() {
         "SUMMARY:" << item.name << endl << "LOCATION:" << item.item_type <<
         " / ";
 
-      if (item.educators.size())
-        for (const auto& educator : item.educators)
-          ofs << educator << " / ";
-
       for (const auto& place : item.places) {
         ofs << place;
         if (place != item.places.back())
           ofs << " / ";
       }
+
+      if (item.educators.size()) {
+        ofs << " / ";
+        for (const auto& educator : item.educators) {
+          ofs << educator;
+          if (educator != item.educators.back())
+            ofs << " / ";
+        }
+      }
+
       ofs << "\nEND:VEVENT\n\n";
     }
   }
