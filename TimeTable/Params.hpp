@@ -5,9 +5,10 @@
 
 struct Params {
   unsigned short dep{ 0 }, course{ 0 },
-    group{ 0 }, week{ 0 };
+    group{ 0 }, week{ 0 }, sleep{ 15 };
   bool list{ false }, clear{ false },
-    ics{ false };
+    ics{ false }, semester{ false },
+    until_semester{ false };
   std::vector<std::string> group_names;
   std::string filename, proxy;
 

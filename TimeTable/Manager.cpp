@@ -25,7 +25,7 @@ const string Manager::getPtimeString(const ptime& time, const char* format) {
   return ss.str();
 }
 
-void Manager::getTimeTable() {
+void Manager::setTimeTable() {
   try {
     if (p.clear) {
       unsigned cnt{ 0 };
@@ -39,11 +39,12 @@ void Manager::getTimeTable() {
       cout << "Удалено файлов: " << cnt << endl;
     }
     else if (p.list)
-      return;
+      for (const auto& group : p.group_names)
+        cout << group << endl;
     else if (p.group && p.week)
-      tt = parser.parse(p, week_url());
+      parser.parse(&tt, p, week_url());
     else if (p.group && !p.week)
-      tt = parser.parse(p, today_url());
+      parser.parse(&tt, p, today_url());
     else {
       cout << "Введите номер группы: ";
       while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
@@ -51,7 +52,7 @@ void Manager::getTimeTable() {
         cin.clear();
         cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
       }
-      tt = parser.parse(p, today_url());
+      parser.parse(&tt, p, today_url());
     }
   }
   catch (bad_alloc const&) {
@@ -95,11 +96,12 @@ void Manager::printTimeTable() {
 
 void Manager::writeIcsTimeTable() {
   stringstream filename;
-  filename << tt.group << "_Week_";
-  if (tt.week)
-    filename << tt.week;
-  else
-    filename << "Today";
+  filename << tt.group << (p.semester ? "_Semester" : "_Week_");
+  if (!p.semester)
+    if (tt.week)
+      filename << tt.week;
+    else
+      filename << "Today";
   filename << ".ics";
 
   cout << "Вывод в файл " << filename.str() << endl;
@@ -176,7 +178,29 @@ Manager::Manager(int& argc, char* argv[]) {
 }
 
 void Manager::run() {
-  getTimeTable();
+  if (!p.list && !p.clear && (p.semester || p.until_semester)) {
+    unsigned short week = 18;
+    if (p.until_semester)
+      week = parser.parse_week(p, today_url());
+    else if (p.semester)
+      week = 1;
+
+    for (; week <= 18; week++) {
+      cout << "Получаю расписание " << week << " недели\n";
+      p.week = week;
+      setTimeTable();
+      if (week != 18) {
+        cout << "Ожидаю " << p.sleep << " секунд\n";
+        this_thread::sleep_for(chrono::seconds(p.sleep));
+      }
+    }
+  }
+  else
+    setTimeTable();
+  
+  if (p.list || p.clear)
+    return;
+
   if (p.ics)
     writeIcsTimeTable();
   else
