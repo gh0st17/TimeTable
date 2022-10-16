@@ -243,6 +243,7 @@ orleans.codegen.cs
 *.xml
 *.html
 *.ico
+*.ics
 Resource.rc
 Resource.aps
 resource.h

@@ -16,7 +16,7 @@ const string Manager::group_url() {
 }
 
 const string Manager::getPtimeString(const ptime& time, const char* format) {
-  static locale loc(cout.getloc(),
+  locale loc(cout.getloc(),
     new time_facet(format));
 
   stringstream ss;
