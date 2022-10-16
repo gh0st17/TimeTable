@@ -96,7 +96,9 @@ void Manager::printTimeTable() {
 
 void Manager::writeIcsTimeTable() {
   stringstream filename;
-  filename << tt.group << (p.semester ? "_Semester" : "_Week_");
+  filename << tt.group << 
+    (p.semester ? "_Semester" : 
+      (p.until_semester ? "_Until_Semester" : "_Week_"));
   if (!p.semester)
     if (tt.week)
       filename << tt.week;
