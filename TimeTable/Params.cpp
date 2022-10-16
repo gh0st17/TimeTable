@@ -41,6 +41,8 @@ Params::Params(Params& p, int& argc, char* argv[]) {
     }
     else if (param == "--list" || param == "-l")
       list = true;
+    else if (param == "--ics")
+      ics = true;
     else if (param == "--clear" || param == "-c") {
       clear = true;
       return;
@@ -69,6 +71,7 @@ void Params::printHelp() {
     "  --week,  - Номер недели от 1 до 18\n  -w\n" <<
     "  --list,  - Показать только список групп\n  -l\n" <<
     "  --clear, - Очистить весь кэш\n  -c\n" <<
+    "  --ics,   - Вывод в ics файл\n" <<
     "  --proxy, - Использовать прокси\n" <<
     "             <протокол://адрес:порт>\n";
   exit(1);

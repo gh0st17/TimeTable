@@ -6,7 +6,8 @@
 struct Params {
   unsigned short dep{ 0 }, course{ 0 },
     group{ 0 }, week{ 0 };
-  bool list{ false }, clear{ false };
+  bool list{ false }, clear{ false },
+    ics{ false };
   std::vector<std::string> group_names;
   std::string filename, proxy;
 

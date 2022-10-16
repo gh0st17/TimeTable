@@ -25,41 +25,6 @@ const string Manager::getPtimeString(const ptime& time, const char* format) {
   return ss.str();
 }
 
-Manager::Manager(int& argc, char* argv[]) {
-  try {
-    p.checkArgc(argc);
-    p = Params(argv[1], argv[2]);
-    if (argc > 3)
-      parser.parse_group(p, group_url(), false);
-    else
-      parser.parse_group(p, group_url(), true);
-
-    p = Params(p, argc, argv);
-  }
-  catch (bad_alloc const&) {
-    cerr << "Ошибка выделения памяти\n";
-    exit(1);
-  }
-  catch (const exception& e) {
-    cerr << e.what() << endl;
-    exit(1);
-  }
-  catch (const char* e) {
-    cerr << e << endl;
-    exit(1);
-  }
-
-  cout.imbue(locale(locale::classic(), russian_facet));
-  date_facet::input_collection_type short_weekdays, long_month;
-  copy(&short_weekday_names[0], &short_weekday_names[7],
-    back_inserter(short_weekdays));
-  copy(&long_month_names[0], &long_month_names[11],
-    back_inserter(long_month));
-  russian_facet->short_weekday_names(short_weekdays);
-  russian_facet->long_month_names(long_month);
-  russian_facet->format("%a, %d %B");
-}
-
 void Manager::getTimeTable() {
   try {
     if (p.clear) {
@@ -173,4 +138,47 @@ void Manager::writeIcsTimeTable() {
   }
 
   ofs.close();
+}
+
+Manager::Manager(int& argc, char* argv[]) {
+  try {
+    p.checkArgc(argc);
+    p = Params(argv[1], argv[2]);
+    if (argc > 3)
+      parser.parse_group(p, group_url(), false);
+    else
+      parser.parse_group(p, group_url(), true);
+
+    p = Params(p, argc, argv);
+  }
+  catch (bad_alloc const&) {
+    cerr << "Ошибка выделения памяти\n";
+    exit(1);
+  }
+  catch (const exception& e) {
+    cerr << e.what() << endl;
+    exit(1);
+  }
+  catch (const char* e) {
+    cerr << e << endl;
+    exit(1);
+  }
+
+  cout.imbue(locale(locale::classic(), russian_facet));
+  date_facet::input_collection_type short_weekdays, long_month;
+  copy(&short_weekday_names[0], &short_weekday_names[7],
+    back_inserter(short_weekdays));
+  copy(&long_month_names[0], &long_month_names[11],
+    back_inserter(long_month));
+  russian_facet->short_weekday_names(short_weekdays);
+  russian_facet->long_month_names(long_month);
+  russian_facet->format("%a, %d %B");
+}
+
+void Manager::run() {
+  getTimeTable();
+  if (p.ics)
+    writeIcsTimeTable();
+  else
+    printTimeTable();
 }

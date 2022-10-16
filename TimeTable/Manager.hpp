@@ -32,10 +32,12 @@ private:
   const string group_url();
   const string getPtimeString(const ptime& time, const char* format);
 
-public:
-  Manager(int& argc, char* argv[]);
-
   void getTimeTable();
   void printTimeTable();
   void writeIcsTimeTable();
+
+public:
+  Manager(int& argc, char* argv[]);
+
+  void run();
 };
