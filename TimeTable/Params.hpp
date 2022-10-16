@@ -18,4 +18,3 @@ struct Params {
   void checkArgc(int& argc);
   void printHelp();
 };
-

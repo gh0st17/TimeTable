@@ -55,7 +55,6 @@ Params::Params(Params& p, int& argc, char* argv[]) {
     throw "Номер группы не существует";
 }
 
-
 void Params::checkArgc(int& argc) {
   if (argc < 3)
     printHelp();
