@@ -39,14 +39,27 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       else
         throw "Адрес прокси пропущен";
     }
-    else if (param == "--list" || param == "-l")
+    else if (param == "--sleep") {
+      if (i + 1 < argc) {
+        sleep = stoi(argv[++i]);
+      }
+      else
+        throw "Время простоя пропущено";
+    }
+    else if (param == "--list" || param == "-l") {
       list = true;
-    else if (param == "--ics")
-      ics = true;
+      return;
+    }
     else if (param == "--clear" || param == "-c") {
       clear = true;
       return;
     }
+    else if (param == "--ics")
+      ics = true;
+    else if (param == "--sem")
+      semester = true;
+    else if (param == "--tilsem")
+      until_semester = true;
     else
       throw ("Неизвестный параметр " + param).c_str();
   }
@@ -54,7 +67,6 @@ Params::Params(Params& p, int& argc, char* argv[]) {
   if (argc > 3 && (!group || group > group_names.size()) && !list && !clear)
     throw "Номер группы не существует";
 }
-
 
 void Params::checkArgc(int& argc) {
   if (argc < 3)
@@ -71,8 +83,11 @@ void Params::printHelp() {
     "  --week,  - Номер недели от 1 до 18\n  -w\n" <<
     "  --list,  - Показать только список групп\n  -l\n" <<
     "  --clear, - Очистить весь кэш\n  -c\n" <<
-    "  --ics,   - Вывод в ics файл\n" <<
-    "  --proxy, - Использовать прокси\n" <<
-    "             <протокол://адрес:порт>\n";
+    "  --ics    - Вывод в ics файл\n" <<
+    "  --proxy  - Использовать прокси\n" <<
+    "             <протокол://адрес:порт>\n" <<
+    "  --sem    - Загрузить весь семестр\n" <<
+    "  --tilsem - Загрузить семестр от текущей недели до конца\n" <<
+    "  --sleep  - Время (в секундах) простоя после загрузки недели для семестра\n";
   exit(1);
 }

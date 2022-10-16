@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <thread>
 #include <limits>
 
 #include "Params.hpp"
@@ -32,7 +33,7 @@ private:
   const string group_url();
   const string getPtimeString(const ptime& time, const char* format);
 
-  void getTimeTable();
+  void setTimeTable();
   void printTimeTable();
   void writeIcsTimeTable();
 

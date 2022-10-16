@@ -51,12 +51,14 @@ private:
     {"сентября", 9}, {"октября", 10}, {"ноября", 11}, {"декабря", 12} };
 
   void prepareHTML(std::string* html);
+  void loadDocument(const Params& p, pugi::xml_document* doc, std::string* buffer, const std::string& url);
   const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1);
 
 public:
   Parser() {};
 
-  TimeTable parse(const Params& p, const std::string& url);
+  unsigned short parse_week(const Params& p, const std::string& url);
+  void parse(TimeTable* tt, const Params& p, const std::string& url);
   void parse_group(Params& p, const std::string& url, const bool isPrint);
 };
 

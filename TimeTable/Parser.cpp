@@ -88,6 +88,15 @@ void Parser::prepareHTML(string* html) {
   }
 }
 
+void Parser::loadDocument(const Params& p, pugi::xml_document* doc, string* buffer, const string& url) {
+  if (p.proxy.empty())
+    fetchURL(url, buffer);
+  else
+    fetchURL(url, buffer, p.proxy.c_str());
+  prepareHTML(buffer);
+  doc->load_string(buffer->c_str());
+}
+
 const string Parser::matchRegex(const string str, const regex r, const size_t n) {
   string::const_iterator strBegin(str.cbegin());
   smatch match;
@@ -101,29 +110,48 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-TimeTable Parser::parse(const Params& p, const string& url) {
-  TimeTable tt;
+
+unsigned short Parser::parse_week(const Params& p, const string& url) {
+  unsigned short week_n = 0;
+  pugi::xml_document* doc = new pugi::xml_document();
+  string* buffer = new string();
+  loadDocument(p, doc, buffer, url);
+  delete buffer;
+
+  pugi::xpath_node_set doc_weeks = doc->select_nodes("/html/body/main/div/div/\
+div/article/div/div/div/ul/li");
+  for (const auto& week : doc_weeks) {
+    auto tag_a = week.node().select_node("a");
+    if (tag_a == NULL) {
+      week_n = stoi(week.node().first_child().child_value());
+      delete doc;
+      return week_n;
+    }
+  }
+
+  if (doc != NULL)
+    delete doc;
+  return week_n;
+}
+
+void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
   string text, m_name;
   Item item;
   Day day;
 
   pugi::xml_document* doc = new pugi::xml_document();
   string* buffer = new string();
-  if (p.proxy.empty())
-    fetchURL(url, buffer);
-  else
-    fetchURL(url, buffer, p.proxy.c_str());
-  prepareHTML(buffer);
-  doc->load_string(buffer->c_str());
+  loadDocument(p, doc, buffer, url);
+  delete buffer;
 
   auto node = doc->find_node(group_predicate());
   if (!node)
     throw "Ошибка в документе";
-  tt.group = node.child_value();
+  tt->group = node.child_value();
 
   node = doc->find_node(week_predicate());
   if (node != NULL)
-    tt.week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
+    tt->week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
 
   size_t tp_size;
   pugi::xpath_node_set tp,
@@ -154,9 +182,9 @@ TimeTable Parser::parse(const Params& p, const string& url) {
       tp_size = tp.size();
       for (size_t i = 0; i < tp_size; i++) {
         if (tp[i].node().first_child().name() != string("a"))
-          text = tp[i].node().child_value(); // otherwise
+          text = tp[i].node().child_value();
         else {
-          text = tp[i].node().first_child().child_value(); // prepod
+          text = tp[i].node().first_child().child_value();
           item.educators.push_back(text);
           continue;
         }
@@ -174,16 +202,17 @@ TimeTable Parser::parse(const Params& p, const string& url) {
       day.items.push_back(item);
       item = Item();
     }
-    tt.days.push_back(day);
+    tt->days.push_back(day);
     day = Day();
   }
 
   delete doc;
-  delete buffer;
-  return tt;
 }
 
 void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
+  if (p.clear)
+    return;
+
   pugi::xml_document* doc = new pugi::xml_document();
 
   if (exists(current_path().u8string() + "\\" + p.filename)) {
@@ -192,12 +221,7 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   }
   else {
     string* buffer = new string();
-    if (p.proxy.empty())
-      fetchURL(url, buffer);
-    else
-      fetchURL(url, buffer, p.proxy.c_str());
-    prepareHTML(buffer);
-    doc->load_string(buffer->c_str());
+    loadDocument(p, doc, buffer, url);
     doc->save_file(p.filename.c_str());
     delete buffer;
   }
