@@ -1,5 +1,9 @@
 #include "Parser.hpp"
+#ifdef _WIN64
 #include <curl.h>
+#else
+#include <curl/curl.h>
+#endif
 
 using namespace std;
 using namespace std::filesystem;
