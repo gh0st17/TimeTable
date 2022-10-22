@@ -26,7 +26,9 @@ Params::Params(Params& p, int& argc, char* argv[]) {
     else if (param == "--week" || param == "-w") {
       if (i + 1 < argc) {
         week = stoi(argv[++i]);
-        if ((!week || week > 18) && !list && !clear)
+        if (week == (unsigned short)(-1))
+          break;
+        if ((!week || (week > 18)) && !list && !clear)
           throw "Такой недели не существует";
       }
       else
@@ -64,7 +66,7 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       throw ("Неизвестный параметр " + param).c_str();
   }
 
-  if (argc > 3 && (!group || group > group_names.size()) && !list && !clear)
+  if (argc > 3 && (!group || group > group_names.size()) && !list && !clear && week != (unsigned short)(-1))
     throw "Номер группы не существует";
 }
 

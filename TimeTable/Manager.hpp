@@ -33,6 +33,8 @@ private:
   const string group_url();
   const string getPtimeString(const ptime& time, const char* format);
 
+  void readTT();
+  void writeTT();
   void setTimeTable();
   void printTimeTable();
   void writeIcsTimeTable();

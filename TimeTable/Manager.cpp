@@ -25,6 +25,14 @@ const string Manager::getPtimeString(const ptime& time, const char* format) {
   return ss.str();
 }
 
+void Manager::readTT() {
+
+}
+
+void Manager::writeTT() {
+
+}
+
 void Manager::setTimeTable() {
   try {
     if (p.clear) {
@@ -99,7 +107,7 @@ void Manager::writeIcsTimeTable() {
   filename << tt.group << 
     (p.semester ? "_Semester" : 
       (p.until_semester ? "_Until_Semester" : "_Week_"));
-  if (!p.semester)
+  if (!p.semester && !p.until_semester)
     if (tt.week)
       filename << tt.week;
     else
@@ -180,10 +188,13 @@ Manager::Manager(int& argc, char* argv[]) {
 }
 
 void Manager::run() {
-  if (!p.list && !p.clear && (p.semester || p.until_semester)) {
+  if (p.week != -1 && !p.list && !p.clear && (p.semester || p.until_semester)) {
     unsigned short week = 18;
-    if (p.until_semester)
+    if (p.until_semester) {
       week = parser.parse_week(p, today_url());
+      if (day_clock::local_day().day_of_week().as_number() == 0)
+        week++;
+    }
     else if (p.semester)
       week = 1;
 
@@ -197,9 +208,15 @@ void Manager::run() {
       }
     }
   }
+  else if (p.week == (unsigned short)(-1)) {
+    cout << parser.parse_week(p, today_url());
+    return;
+  }
   else
     setTimeTable();
   
+
+
   if (p.list || p.clear)
     return;
 
