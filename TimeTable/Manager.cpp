@@ -209,7 +209,7 @@ void Manager::run() {
     }
   }
   else if (p.week == (unsigned short)(-1)) {
-    cout << parser.parse_week(p, today_url());
+    cout << parser.parse_week(p, today_url()) << endl;
     return;
   }
   else
