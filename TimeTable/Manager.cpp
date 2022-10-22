@@ -81,7 +81,7 @@ void Manager::printTimeTable() {
     cout << "Учебная неделя №" << tt.week << "\n\n";
 
   for (const auto& day : tt.days) {
-    cout << day.date << endl;
+    cout << day.pdate << endl;
     for (const auto& item : day.items) {
       cout << '[' << item.item_type << "] " << item.name << endl <<
         getPtimeString(item.time, "%H:%M") << " - " <<
@@ -214,8 +214,6 @@ void Manager::run() {
   }
   else
     setTimeTable();
-  
-
 
   if (p.list || p.clear)
     return;

@@ -161,7 +161,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
     text = doc_day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
     m_name = matchRegex(text, regex(R"(\s(\W+)$)"), 2);
-    day.date = date(day.date.year(), month.at(m_name),
+    day.pdate = date(day.pdate.year(), month.at(m_name),
       stoi(matchRegex(text, regex(R"(\d{2})"))));
     for (const auto& doc_item : doc_day.node().select_nodes("div/div/div")) {
       text = doc_item.node().select_node("div/p").node().child_value();
@@ -193,7 +193,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
           unsigned short h = stoi(matchRegex(text, regex(R"(\d+)"))),
             m = stoi(matchRegex(text, regex(R"(\d+)"), 2));
 
-          item.time = ptime(day.date, hours(h) + minutes(m));
+          item.time = ptime(day.pdate, hours(h) + minutes(m));
         }
         else
           item.places.push_back(text);
@@ -214,6 +214,11 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
     return;
 
   pugi::xml_document* doc = new pugi::xml_document();
+#ifdef _WIN64
+  string filename = current_path().u8string() + "\\" + p.filename;
+#else
+  string filename = current_path().u8string() + '/' + p.filename;
+#endif
 
   if (exists(current_path().u8string() + "\\" + p.filename)) {
     cout << "Использую список групп из кэша\n\n";

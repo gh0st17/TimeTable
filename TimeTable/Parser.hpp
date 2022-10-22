@@ -24,7 +24,7 @@ struct Item {
 typedef std::vector<Item> Items;
 
 struct Day {
-  date date = day_clock::local_day();
+  date pdate = day_clock::local_day();
   Items items;
 };
 
