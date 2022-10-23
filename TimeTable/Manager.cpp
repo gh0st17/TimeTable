@@ -103,6 +103,11 @@ void Manager::printTimeTable() {
 }
 
 void Manager::writeIcsTimeTable() {
+  uniform_int_distribution<unsigned long long> distr;
+  random_device rd;
+  knuth_b knuth(rd());
+  knuth.seed((unsigned long long)time(0));
+
   stringstream filename;
   filename << tt.group << 
     (p.semester ? "_Semester" : 
@@ -118,14 +123,15 @@ void Manager::writeIcsTimeTable() {
 
   ofstream ofs(filename.str());
   ofs << "BEGIN:VCALENDAR\nVERSION:2.0\n" <<
-    "PRODID: ghost17 | Alexey Sorokin\n" <<
-    "CALSCALE: GREGORIAN\n\n";
+    "PRODID:ghost17 | Alexey Sorokin\n" <<
+    "CALSCALE:GREGORIAN\n\n";
 
   for (const auto& day : tt.days) {
     for (const auto& item : day.items) {
-      ofs << "BEGIN:VEVENT\nDTSTART:" <<
-        getPtimeString(item.time, "%Y%m%dT%H%M%S") << endl <<
-        "DTEND:" <<
+      distr.param(uniform_int_distribution<unsigned long long>::param_type(0xFFFFFFFF, 0x8000000000000000));
+      ofs << "BEGIN:VEVENT\nUID:" << distr(knuth) << "\nDTSTART:" <<
+        getPtimeString(item.time, "%Y%m%dT%H%M%S") << "\nDTSTAMP:" <<
+        getPtimeString(item.time, "%Y%m%dT%H%M%SZ") << "\nDTEND:" <<
         getPtimeString(item.time + minutes(90), "%Y%m%dT%H%M%S") << endl <<
         "SUMMARY:" << item.name << endl << "LOCATION:" << item.item_type <<
         " / ";

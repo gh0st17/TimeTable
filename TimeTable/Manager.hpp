@@ -4,6 +4,7 @@
 #include <sstream>
 #include <thread>
 #include <limits>
+#include <random>
 
 #include "Params.hpp"
 #include "Parser.hpp"
