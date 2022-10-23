@@ -132,9 +132,8 @@ void Manager::writeIcsTimeTable() {
       ofs << "BEGIN:VEVENT\nUID:" << distr(knuth) << "\nDTSTART:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%S") << "\nDTSTAMP:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%SZ") << "\nDTEND:" <<
-        getPtimeString(item.time + minutes(90), "%Y%m%dT%H%M%S") << endl <<
-        "SUMMARY:" << item.name << endl << "LOCATION:" << item.item_type <<
-        " / ";
+        getPtimeString(item.time + minutes(90), "%Y%m%dT%H%M%S") <<
+        "\nSUMMARY:" << item.name << "\nLOCATION:";
 
       for (const auto& place : item.places) {
         ofs << place;
@@ -142,18 +141,17 @@ void Manager::writeIcsTimeTable() {
           ofs << " / ";
       }
 
-      if (item.educators.size()) {
-        ofs << " / ";
-        for (const auto& educator : item.educators) {
-          ofs << educator;
-          if (educator != item.educators.back())
-            ofs << " / ";
-        }
-      }
+      ofs << " / " << item.item_type;
+
+      if (item.educators.size())
+        for (const auto& educator : item.educators)
+          ofs << " / " << educator;
 
       ofs << "\nEND:VEVENT\n\n";
     }
   }
+
+  ofs << "END:VCALENDAR";
 
   ofs.close();
 }
