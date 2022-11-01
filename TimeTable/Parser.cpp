@@ -114,7 +114,6 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-
 unsigned short Parser::parse_week(const Params& p, const string& url) {
   unsigned short week_n = 0;
   pugi::xml_document* doc = new pugi::xml_document();
@@ -158,8 +157,16 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
     tt->week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
 
   size_t tp_size;
-  pugi::xpath_node_set tp,
-    doc_days = doc->select_nodes("/html/body/main/div/div/div/article/ul/li");
+  pugi::xpath_node_set tp, doc_days;
+
+  doc_days = (p.session ?
+    doc->select_nodes("/html/body/main/div/div/div/article/div/ul/li") :
+    doc->select_nodes("/html/body/main/div/div/div/article/ul/li"));
+
+  if (doc_days.begin()->node() == NULL) {
+    delete doc;
+    throw "Расписание не найдено";
+  }
 
   for (const auto& doc_day : doc_days) {
     text = doc_day.node().select_node("div/div/span").node().child_value();
@@ -180,6 +187,8 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
       else
         text = doc_item.node().select_node("div/p/span").node().child_value();
       boost::algorithm::trim(text);
+      for (const auto& ch : { "(", ")" })
+        boost::algorithm::erase_all(text, ch);
       item.item_type = text;
 
       tp = doc_item.node().select_nodes("ul/li");

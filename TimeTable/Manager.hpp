@@ -32,6 +32,7 @@ private:
   const string today_url();
   const string  week_url();
   const string group_url();
+  const string session_url();
   const string getPtimeString(const ptime& time, const char* format);
 
   void readTT();

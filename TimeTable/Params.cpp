@@ -62,6 +62,8 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       semester = true;
     else if (param == "--tilsem")
       until_semester = true;
+    else if (param == "--session")
+      session = true;
     else
       throw ("Неизвестный параметр " + param).c_str();
   }

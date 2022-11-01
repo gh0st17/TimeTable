@@ -15,6 +15,10 @@ const string Manager::group_url() {
     + to_string(p.dep) + "&course=" + to_string(p.course);
 }
 
+const string Manager::session_url() {
+  return base_url + "session/index.php?group=" + p.group_names[p.group - 1];
+}
+
 const string Manager::getPtimeString(const ptime& time, const char* format) {
   locale loc(cout.getloc(),
     new time_facet(format));
@@ -49,6 +53,8 @@ void Manager::setTimeTable() {
     else if (p.list)
       for (const auto& group : p.group_names)
         cout << group << endl;
+    else if (p.group && p.session)
+      parser.parse(&tt, p, session_url());
     else if (p.group && p.week)
       parser.parse(&tt, p, week_url());
     else if (p.group && !p.week)
@@ -152,7 +158,6 @@ void Manager::writeIcsTimeTable() {
   }
 
   ofs << "END:VCALENDAR";
-
   ofs.close();
 }
 
@@ -222,8 +227,9 @@ void Manager::run() {
   if (p.list || p.clear)
     return;
 
-  if (p.ics)
-    writeIcsTimeTable();
-  else
-    printTimeTable();
+  if (tt.days.size())
+    if (p.ics)
+      writeIcsTimeTable();
+    else
+      printTimeTable();
 }
