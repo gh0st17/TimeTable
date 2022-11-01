@@ -236,17 +236,17 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
 #ifdef _WIN64
   string filename = current_path().u8string() + "\\" + p.filename;
 #else
-  string filename = current_path().u8string() + '/' + p.filename;
+  string filename = "./" + p.filename;
 #endif
 
-  if (exists(current_path().u8string() + "\\" + p.filename)) {
+  if (exists(filename)) {
     cout << "Использую список групп из кэша\n\n";
-    doc->load_file(p.filename.c_str());
+    doc->load_file(filename.c_str());
   }
   else {
     string* buffer = new string();
     loadDocument(p, doc, buffer, url);
-    doc->save_file(p.filename.c_str());
+    doc->save_file(filename.c_str());
     delete buffer;
   }
 
