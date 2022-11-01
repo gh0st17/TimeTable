@@ -152,6 +152,12 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
     throw "Ошибка в документе";
   tt->group = node.child_value();
 
+  if (p.session) {
+    vector<string> splitted;
+    boost::algorithm::split(splitted, tt->group, boost::is_any_of(" "));
+    tt->group = splitted.back();
+  }
+
   node = doc->find_node(week_predicate());
   if (node != NULL)
     tt->week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
