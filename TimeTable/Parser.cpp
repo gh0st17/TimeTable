@@ -22,14 +22,15 @@ void fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
     curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookies.txt");
     curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "cookies.txt");
+    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
     if (proxy)
       curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
     curl_easy_setopt(curl, CURLOPT_USERAGENT,
-      "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0)\
-Gecko/20100101 Firefox/47.0");
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+(KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 OPR/92.0.0.0");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, readBuffer);
     cout << "Загружаю страницу" << (proxy ? " через прокси" : "") << "...";

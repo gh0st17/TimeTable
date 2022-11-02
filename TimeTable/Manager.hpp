@@ -17,7 +17,7 @@ private:
   Params p;
   Parser parser;
   TimeTable tt;
-  const string base_url = "http://mai.ru/education/studies/schedule/";
+  const string base_url = "https://mai.ru/education/studies/schedule/";
 
   const char* const short_weekday_names[8] = {
     "Вс", "Пн", "Вт","Ср", "Чт", "Пт", "Сб", "Сб"
