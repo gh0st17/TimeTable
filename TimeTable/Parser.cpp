@@ -115,29 +115,6 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-unsigned short Parser::parse_week(const Params& p, const string& url) {
-  unsigned short week_n = 0;
-  pugi::xml_document* doc = new pugi::xml_document();
-  string* buffer = new string();
-  loadDocument(p, doc, buffer, url);
-  delete buffer;
-
-  pugi::xpath_node_set doc_weeks = doc->select_nodes("/html/body/main/div/div/\
-div/article/div/div/div/ul/li");
-  for (const auto& week : doc_weeks) {
-    auto tag_a = week.node().select_node("a");
-    if (tag_a == NULL) {
-      week_n = stoi(week.node().first_child().child_value());
-      delete doc;
-      return week_n;
-    }
-  }
-
-  if (doc != NULL)
-    delete doc;
-  return week_n;
-}
-
 void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
   string text, m_name;
   Item item;

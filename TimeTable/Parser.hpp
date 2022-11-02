@@ -57,7 +57,6 @@ private:
 public:
   Parser() {};
 
-  unsigned short parse_week(const Params& p, const std::string& url);
   void parse(TimeTable* tt, const Params& p, const std::string& url);
   void parse_group(Params& p, const std::string& url, const bool isPrint);
 };

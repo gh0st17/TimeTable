@@ -1,3 +1,4 @@
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -37,6 +38,7 @@ private:
 
   void readTT();
   void writeTT();
+  unsigned short calcWeek();
   void setTimeTable();
   void printTimeTable();
   void writeIcsTimeTable();

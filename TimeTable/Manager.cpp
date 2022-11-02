@@ -37,6 +37,15 @@ void Manager::writeTT() {
 
 }
 
+unsigned short Manager::calcWeek() {
+  short week = day_clock::local_day().week_number() - 34;
+
+  if (week < 1)
+    week = 1;
+
+  return week;
+}
+
 void Manager::setTimeTable() {
   try {
     if (p.clear) {
@@ -201,7 +210,7 @@ void Manager::run() {
   if (p.week != -1 && !p.list && !p.clear && (p.semester || p.until_semester)) {
     unsigned short week = 18;
     if (p.until_semester) {
-      week = parser.parse_week(p, today_url());
+      week = calcWeek();
       if (day_clock::local_day().day_of_week().as_number() == 0)
         week++;
     }
@@ -219,7 +228,7 @@ void Manager::run() {
     }
   }
   else if (p.week == (unsigned short)(-1)) {
-    cout << parser.parse_week(p, today_url()) << endl;
+    cout << calcWeek() << endl;
     return;
   }
   else
