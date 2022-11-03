@@ -55,40 +55,29 @@ unsigned short Manager::calcWeek() {
 }
 
 void Manager::setTimeTable() {
-  try {
-    if (p.list)
-      for (const auto& group : p.group_names)
-        cout << group << endl;
-    else if (p.group && p.session)
-      parser.parse(&tt, p, session_url());
-    else if (p.group && (p.w_cur || p.w_next)) {
-      p.week = calcWeek();
-      if (p.week != 18 && p.w_next)
-        p.week++;
-      parser.parse(&tt, p, week_url());
-    }
-    else if (p.group && p.week)
-      parser.parse(&tt, p, week_url());
-    else if (p.group && !p.week)
-      parser.parse(&tt, p, today_url());
-    else {
+  if (p.list)
+    for (const auto& group : p.group_names)
+      cout << group << endl;
+  else if (p.group && p.session)
+    parser.parse(&tt, p, session_url());
+  else if (p.group && (p.w_cur || p.w_next)) {
+    p.week = calcWeek();
+    if (p.week != 18 && p.w_next)
+      p.week++;
+    parser.parse(&tt, p, week_url());
+  }
+  else if (p.group && p.week)
+    parser.parse(&tt, p, week_url());
+  else if (p.group && !p.week)
+    parser.parse(&tt, p, today_url());
+  else {
+    cout << "Введите номер группы: ";
+    while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
       cout << "Введите номер группы: ";
-      while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
-        cout << "Введите номер группы: ";
-        cin.clear();
-        cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-      }
-      parser.parse(&tt, p, today_url());
+      cin.clear();
+      cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
     }
-  }
-  catch (bad_alloc const&) {
-    cerr << "Ошибка выделения памяти\n";
-  }
-  catch (const exception& e) {
-    cerr << e.what() << endl;
-  }
-  catch (const char* e) {
-    cerr << e << endl;
+    parser.parse(&tt, p, today_url());
   }
 }
 
@@ -183,28 +172,14 @@ void Manager::writeIcsTimeTable() {
 }
 
 Manager::Manager(int& argc, char* argv[]) {
-  try {
-    p.checkArgc(argc);
-    p = Params(argv[1], argv[2]);
-    if (argc > 3)
-      parser.parse_group(p, group_url(), false);
-    else
-      parser.parse_group(p, group_url(), true);
+  p.checkArgc(argc);
+  p = Params(argv[1], argv[2]);
+  if (argc > 3)
+    parser.parse_group(p, group_url(), false);
+  else
+    parser.parse_group(p, group_url(), true);
 
-    p = Params(p, argc, argv);
-  }
-  catch (bad_alloc const&) {
-    cerr << "Ошибка выделения памяти\n";
-    exit(1);
-  }
-  catch (const exception& e) {
-    cerr << e.what() << endl;
-    exit(1);
-  }
-  catch (const char* e) {
-    cerr << e << endl;
-    exit(1);
-  }
+  p = Params(p, argc, argv);
 
   cout.imbue(locale(locale::classic(), russian_facet));
   date_facet::input_collection_type short_weekdays, long_month;

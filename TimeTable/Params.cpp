@@ -21,7 +21,7 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       if (i + 1 < argc)
         group = stoi(argv[++i]);
       else
-        throw "Номер группы пропущен";
+        throw std::invalid_argument("Номер группы пропущен");
     }
     else if (param == "--week" || param == "-w") {
       if (i + 1 < argc) {
@@ -38,29 +38,29 @@ Params::Params(Params& p, int& argc, char* argv[]) {
 
         week = stoi(argv[++i]);
         if ((!week || (week > 18)) && !list)
-          throw "Такой недели не существует";
+          throw invalid_argument("Такой недели не существует");
       }
       else
-        throw "Номер недели пропущен";
+        throw invalid_argument("Номер недели пропущен");
     }
     else if (param == "--proxy") {
       if (i + 1 < argc)
         proxy = argv[++i];
       else
-        throw "Адрес прокси пропущен";
+        throw invalid_argument("Адрес прокси пропущен");
     }
     else if (param == "--output" || param == "-o") {
       if (i + 1 < argc)
         output_path = argv[++i];
       else
-        throw "Путь вывода пропущен";
+        throw invalid_argument("Путь вывода пропущен");
     }
     else if (param == "--sleep") {
       if (i + 1 < argc) {
         sleep = stoi(argv[++i]);
       }
       else
-        throw "Время простоя пропущено";
+        throw invalid_argument("Время простоя пропущено");
     }
     else if (param == "--list" || param == "-l") {
       list = true;
@@ -75,11 +75,11 @@ Params::Params(Params& p, int& argc, char* argv[]) {
     else if (param == "--session")
       session = true;
     else
-      throw ("Неизвестный параметр " + param).c_str();
+      throw invalid_argument(("Неизвестный параметр " + param).c_str());
   }
 
   if (argc > 3 && (!group || group > group_names.size()) && !list)
-    throw "Номер группы не существует";
+    throw std::invalid_argument("Номер группы не существует");
 }
 
 void Params::checkArgc(int& argc) {

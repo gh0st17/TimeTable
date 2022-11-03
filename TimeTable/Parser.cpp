@@ -50,7 +50,7 @@ void fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
 
   if (readBuffer->empty()) {
     delete readBuffer;
-    throw "Пустой буффер";
+    throw exception("Пустой буффер");
   }
 }
 
@@ -126,7 +126,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
 
   auto node = doc->find_node(group_predicate());
   if (!node)
-    throw "Ошибка в документе";
+    throw exception("Ошибка в документе");
   tt->group = node.child_value();
 
   if (p.session) {
@@ -148,7 +148,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
 
   if (doc_days.begin()->node() == NULL) {
     delete doc;
-    throw "Расписание не найдено";
+    throw exception("Расписание не найдено");
   }
 
   for (const auto& doc_day : doc_days) {
