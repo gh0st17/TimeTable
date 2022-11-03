@@ -48,6 +48,8 @@ unsigned short Manager::calcWeek() {
 
   if (week < 1)
     week = 1;
+  else if (week > 18)
+    week = 18;
 
   return week;
 }
@@ -70,6 +72,12 @@ void Manager::setTimeTable() {
         cout << group << endl;
     else if (p.group && p.session)
       parser.parse(&tt, p, session_url());
+    else if (p.group && (p.w_cur || p.w_next)) {
+      p.week = calcWeek();
+      if (p.week != 18 && p.w_next)
+        p.week++;
+      parser.parse(&tt, p, week_url());
+    }
     else if (p.group && p.week)
       parser.parse(&tt, p, week_url());
     else if (p.group && !p.week)
@@ -226,7 +234,8 @@ Manager::Manager(int& argc, char* argv[]) {
 }
 
 void Manager::run() {
-  if (p.week != -1 && !p.list && !p.clear && (p.semester || p.until_semester)) {
+  if (p.week != 0 && !p.list && !p.clear &&
+      (p.semester || p.until_semester)) {
     unsigned short week = 18;
     if (p.until_semester) {
       week = calcWeek();
@@ -245,10 +254,6 @@ void Manager::run() {
         this_thread::sleep_for(chrono::seconds(p.sleep));
       }
     }
-  }
-  else if (p.week == (unsigned short)(-1)) {
-    cout << calcWeek() << endl;
-    return;
   }
   else
     setTimeTable();

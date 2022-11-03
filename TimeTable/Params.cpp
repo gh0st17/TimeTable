@@ -25,9 +25,18 @@ Params::Params(Params& p, int& argc, char* argv[]) {
     }
     else if (param == "--week" || param == "-w") {
       if (i + 1 < argc) {
+        if (!strcmp(argv[i + 1], "current")) {
+          w_cur = true;
+          i++;
+          continue;
+        }
+        if (!strcmp(argv[i + 1], "next")) {
+          w_next = true;
+          i++;
+          continue;
+        }
+
         week = stoi(argv[++i]);
-        if (week == (unsigned short)(-1))
-          break;
         if ((!week || (week > 18)) && !list && !clear)
           throw "Такой недели не существует";
       }
@@ -73,7 +82,7 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       throw ("Неизвестный параметр " + param).c_str();
   }
 
-  if (argc > 3 && (!group || group > group_names.size()) && !list && !clear && week != (unsigned short)(-1))
+  if (argc > 3 && (!group || group > group_names.size()) && !list && !clear)
     throw "Номер группы не существует";
 }
 
@@ -89,7 +98,7 @@ void Params::printHelp() {
     "  Институт     - Номер института от 1 до 12\n" <<
     "  Курс         - Номер курса от 1 до 6\n" <<
     "  --group, -g  - Номер группы из списка\n" <<
-    "  --week,  -w  - Номер недели от 1 до 18\n" <<
+    "  --week,  -w  - Номер недели от 1 до 18 или current для текущей недили, next — для следующей\n" <<
     "  --list,  -l  - Показать только список групп\n" <<
     "  --clear, -c  - Очистить весь кэш\n" <<
     "  --ics        - Вывод в ics файл\n" <<

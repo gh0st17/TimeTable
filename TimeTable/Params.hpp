@@ -8,8 +8,8 @@ struct Params {
     group{ 0 }, week{ 0 }, sleep{ 15 };
   bool list{ false }, clear{ false },
     ics{ false }, semester{ false },
-    until_semester{ false },
-    session{ false };
+    until_semester{ false }, session{ false },
+    w_cur{ false }, w_next{ false };
   std::vector<std::string> group_names;
   std::string filename, proxy, output_path = "";
 
