@@ -37,7 +37,7 @@ Params::Params(Params& p, int& argc, char* argv[]) {
         }
 
         week = stoi(argv[++i]);
-        if ((!week || (week > 18)) && !list && !clear)
+        if ((!week || (week > 18)) && !list)
           throw "Такой недели не существует";
       }
       else
@@ -66,10 +66,6 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       list = true;
       return;
     }
-    else if (param == "--clear" || param == "-c") {
-      clear = true;
-      return;
-    }
     else if (param == "--ics")
       ics = true;
     else if (param == "--sem")
@@ -82,7 +78,7 @@ Params::Params(Params& p, int& argc, char* argv[]) {
       throw ("Неизвестный параметр " + param).c_str();
   }
 
-  if (argc > 3 && (!group || group > group_names.size()) && !list && !clear)
+  if (argc > 3 && (!group || group > group_names.size()) && !list)
     throw "Номер группы не существует";
 }
 
@@ -100,7 +96,6 @@ void Params::printHelp() {
     "  --group, -g  - Номер группы из списка\n" <<
     "  --week,  -w  - Номер недели от 1 до 18 или current для текущей недили, next — для следующей\n" <<
     "  --list,  -l  - Показать только список групп\n" <<
-    "  --clear, -c  - Очистить весь кэш\n" <<
     "  --ics        - Вывод в ics файл\n" <<
     "  --proxy      - Использовать прокси\n" <<
     "                 <протокол://адрес:порт>\n" <<

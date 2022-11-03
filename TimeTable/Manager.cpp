@@ -56,18 +56,7 @@ unsigned short Manager::calcWeek() {
 
 void Manager::setTimeTable() {
   try {
-    if (p.clear) {
-      unsigned cnt{ 0 };
-      for (const auto& file : directory_iterator("./")) {
-        if (file.path().extension() == ".xml") {
-          cout << file.path().filename().u8string() << endl;
-          remove(file.path());
-          cnt++;
-        }
-      }
-      cout << "Удалено файлов: " << cnt << endl;
-    }
-    else if (p.list)
+    if (p.list)
       for (const auto& group : p.group_names)
         cout << group << endl;
     else if (p.group && p.session)
@@ -143,12 +132,7 @@ void Manager::writeIcsTimeTable() {
       !std::filesystem::exists(p.output_path))
     std::filesystem::create_directory(p.output_path);
 
-#ifdef _WIN64
-  filename << p.output_path << '/';
-#else
-  filename << p.output_path << '\';
-#endif
-  filename << tt.group << 
+  filename << p.output_path << '/' << tt.group << 
     (p.semester ? "_Semester" : 
       (p.until_semester ? "_Until_Semester" : 
         (p.session ? "_Session" : "_Week_")));
@@ -234,7 +218,7 @@ Manager::Manager(int& argc, char* argv[]) {
 }
 
 void Manager::run() {
-  if (p.week != 0 && !p.list && !p.clear &&
+  if (p.week != 0 && !p.list &&
       (p.semester || p.until_semester)) {
     unsigned short week = 18;
     if (p.until_semester) {
@@ -258,7 +242,7 @@ void Manager::run() {
   else
     setTimeTable();
 
-  if (p.list || p.clear)
+  if (p.list)
     return;
 
   if (tt.days.size())

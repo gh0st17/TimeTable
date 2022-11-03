@@ -1,13 +1,13 @@
 #pragma once
 #include <iostream>
+#include <cstring>
 #include <string>
 #include <vector>
 
 struct Params {
   unsigned short dep{ 0 }, course{ 0 },
     group{ 0 }, week{ 0 }, sleep{ 15 };
-  bool list{ false }, clear{ false },
-    ics{ false }, semester{ false },
+  bool list{ false }, ics{ false }, semester{ false },
     until_semester{ false }, session{ false },
     w_cur{ false }, w_next{ false };
   std::vector<std::string> group_names;
