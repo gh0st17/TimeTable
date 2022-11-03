@@ -24,7 +24,7 @@ struct Item {
 typedef std::vector<Item> Items;
 
 struct Day {
-  date date = day_clock::local_day();
+  date pdate = day_clock::local_day();
   Items items;
 };
 
@@ -57,7 +57,6 @@ private:
 public:
   Parser() {};
 
-  unsigned short parse_week(const Params& p, const std::string& url);
   void parse(TimeTable* tt, const Params& p, const std::string& url);
   void parse_group(Params& p, const std::string& url, const bool isPrint);
 };

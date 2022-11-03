@@ -1,8 +1,11 @@
 #include "Parser.hpp"
+#ifdef _WIN64
 #include <curl.h>
+#else
+#include <curl/curl.h>
+#endif
 
 using namespace std;
-using namespace std::filesystem;
 
 static size_t writeCallback(void* contents, size_t size,
   size_t nmemb, void* userp) {
@@ -18,14 +21,15 @@ void fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
     curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookies.txt");
     curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "cookies.txt");
+    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
     if (proxy)
       curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
     curl_easy_setopt(curl, CURLOPT_USERAGENT,
-      "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0)\
-Gecko/20100101 Firefox/47.0");
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
+(KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 OPR/92.0.0.0");
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, readBuffer);
     cout << "Загружаю страницу" << (proxy ? " через прокси" : "") << "...";
@@ -46,7 +50,7 @@ Gecko/20100101 Firefox/47.0");
 
   if (readBuffer->empty()) {
     delete readBuffer;
-    throw "Пустой буффер";
+    throw exception("Пустой буффер");
   }
 }
 
@@ -110,30 +114,6 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-
-unsigned short Parser::parse_week(const Params& p, const string& url) {
-  unsigned short week_n = 0;
-  pugi::xml_document* doc = new pugi::xml_document();
-  string* buffer = new string();
-  loadDocument(p, doc, buffer, url);
-  delete buffer;
-
-  pugi::xpath_node_set doc_weeks = doc->select_nodes("/html/body/main/div/div/\
-div/article/div/div/div/ul/li");
-  for (const auto& week : doc_weeks) {
-    auto tag_a = week.node().select_node("a");
-    if (tag_a == NULL) {
-      week_n = stoi(week.node().first_child().child_value());
-      delete doc;
-      return week_n;
-    }
-  }
-
-  if (doc != NULL)
-    delete doc;
-  return week_n;
-}
-
 void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
   string text, m_name;
   Item item;
@@ -146,22 +126,36 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
 
   auto node = doc->find_node(group_predicate());
   if (!node)
-    throw "Ошибка в документе";
+    throw exception("Ошибка в документе");
   tt->group = node.child_value();
+
+  if (p.session) {
+    vector<string> splitted;
+    boost::algorithm::split(splitted, tt->group, boost::is_any_of(" "));
+    tt->group = splitted.back();
+  }
 
   node = doc->find_node(week_predicate());
   if (node != NULL)
     tt->week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
 
   size_t tp_size;
-  pugi::xpath_node_set tp,
-    doc_days = doc->select_nodes("/html/body/main/div/div/div/article/ul/li");
+  pugi::xpath_node_set tp, doc_days;
+
+  doc_days = (p.session ?
+    doc->select_nodes("/html/body/main/div/div/div/article/div/ul/li") :
+    doc->select_nodes("/html/body/main/div/div/div/article/ul/li"));
+
+  if (doc_days.begin()->node() == NULL) {
+    delete doc;
+    throw exception("Расписание не найдено");
+  }
 
   for (const auto& doc_day : doc_days) {
     text = doc_day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
     m_name = matchRegex(text, regex(R"(\s(\W+)$)"), 2);
-    day.date = date(day.date.year(), month.at(m_name),
+    day.pdate = date(day.pdate.year(), month.at(m_name),
       stoi(matchRegex(text, regex(R"(\d{2})"))));
     for (const auto& doc_item : doc_day.node().select_nodes("div/div/div")) {
       text = doc_item.node().select_node("div/p").node().child_value();
@@ -176,6 +170,8 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
       else
         text = doc_item.node().select_node("div/p/span").node().child_value();
       boost::algorithm::trim(text);
+      for (const auto& ch : { "(", ")" })
+        boost::algorithm::erase_all(text, ch);
       item.item_type = text;
 
       tp = doc_item.node().select_nodes("ul/li");
@@ -193,7 +189,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
           unsigned short h = stoi(matchRegex(text, regex(R"(\d+)"))),
             m = stoi(matchRegex(text, regex(R"(\d+)"), 2));
 
-          item.time = ptime(day.date, hours(h) + minutes(m));
+          item.time = ptime(day.pdate, hours(h) + minutes(m));
         }
         else
           item.places.push_back(text);
@@ -210,19 +206,20 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
 }
 
 void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
-  if (p.clear)
-    return;
+  if (!std::filesystem::exists("groups"))
+    std::filesystem::create_directory("groups");
 
   pugi::xml_document* doc = new pugi::xml_document();
+  string filename = "groups/" + p.filename;
 
-  if (exists(current_path().u8string() + "\\" + p.filename)) {
+  if (std::filesystem::exists(filename)) {
     cout << "Использую список групп из кэша\n\n";
-    doc->load_file(p.filename.c_str());
+    doc->load_file(filename.c_str());
   }
   else {
     string* buffer = new string();
     loadDocument(p, doc, buffer, url);
-    doc->save_file(p.filename.c_str());
+    doc->save_file(filename.c_str());
     delete buffer;
   }
 

@@ -15,6 +15,10 @@ const string Manager::group_url() {
     + to_string(p.dep) + "&course=" + to_string(p.course);
 }
 
+const string Manager::session_url() {
+  return base_url + "session/index.php?group=" + p.group_names[p.group - 1];
+}
+
 const string Manager::getPtimeString(const ptime& time, const char* format) {
   locale loc(cout.getloc(),
     new time_facet(format));
@@ -25,44 +29,55 @@ const string Manager::getPtimeString(const ptime& time, const char* format) {
   return ss.str();
 }
 
+void Manager::readTT() {
+
+}
+
+void Manager::writeTT() {
+
+}
+
+unsigned short Manager::calcWeek() {
+  short week;
+  auto const today = day_clock::local_day();
+
+  if (today >= date(today.year(), 9, 1))
+    week = today.week_number() - 34;
+  else
+    week = today.week_number() - 6;
+
+  if (week < 1)
+    week = 1;
+  else if (week > 18)
+    week = 18;
+
+  return week;
+}
+
 void Manager::setTimeTable() {
-  try {
-    if (p.clear) {
-      unsigned cnt{ 0 };
-      for (const auto& file : directory_iterator("./")) {
-        if (file.path().extension() == ".xml") {
-          cout << file.path().filename().u8string() << endl;
-          remove(file.path());
-          cnt++;
-        }
-      }
-      cout << "Удалено файлов: " << cnt << endl;
-    }
-    else if (p.list)
-      for (const auto& group : p.group_names)
-        cout << group << endl;
-    else if (p.group && p.week)
-      parser.parse(&tt, p, week_url());
-    else if (p.group && !p.week)
-      parser.parse(&tt, p, today_url());
-    else {
+  if (p.list)
+    for (const auto& group : p.group_names)
+      cout << group << endl;
+  else if (p.group && p.session)
+    parser.parse(&tt, p, session_url());
+  else if (p.group && (p.w_cur || p.w_next)) {
+    p.week = calcWeek();
+    if (p.week != 18 && p.w_next)
+      p.week++;
+    parser.parse(&tt, p, week_url());
+  }
+  else if (p.group && p.week)
+    parser.parse(&tt, p, week_url());
+  else if (p.group && !p.week)
+    parser.parse(&tt, p, today_url());
+  else {
+    cout << "Введите номер группы: ";
+    while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
       cout << "Введите номер группы: ";
-      while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
-        cout << "Введите номер группы: ";
-        cin.clear();
-        cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
-      }
-      parser.parse(&tt, p, today_url());
+      cin.clear();
+      cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
     }
-  }
-  catch (bad_alloc const&) {
-    cerr << "Ошибка выделения памяти\n";
-  }
-  catch (const exception& e) {
-    cerr << e.what() << endl;
-  }
-  catch (const char* e) {
-    cerr << e << endl;
+    parser.parse(&tt, p, today_url());
   }
 }
 
@@ -73,7 +88,7 @@ void Manager::printTimeTable() {
     cout << "Учебная неделя №" << tt.week << "\n\n";
 
   for (const auto& day : tt.days) {
-    cout << day.date << endl;
+    cout << day.pdate << endl;
     for (const auto& item : day.items) {
       cout << '[' << item.item_type << "] " << item.name << endl <<
         getPtimeString(item.time, "%H:%M") << " - " <<
@@ -95,32 +110,46 @@ void Manager::printTimeTable() {
 }
 
 void Manager::writeIcsTimeTable() {
+  uniform_int_distribution<unsigned long long> distr;
+  random_device rd;
+  knuth_b knuth(rd());
+  knuth.seed((unsigned long long)time(0));
+
   stringstream filename;
-  filename << tt.group << 
+
+  if (!p.output_path.empty() &&
+      !std::filesystem::exists(p.output_path))
+    std::filesystem::create_directory(p.output_path);
+
+  filename << p.output_path << '/' << tt.group << 
     (p.semester ? "_Semester" : 
-      (p.until_semester ? "_Until_Semester" : "_Week_"));
-  if (!p.semester)
+      (p.until_semester ? "_Until_Semester" : 
+        (p.session ? "_Session" : "_Week_")));
+  
+  if (!p.semester && !p.until_semester && !p.session) {
     if (tt.week)
       filename << tt.week;
     else
       filename << "Today";
+  }
+  
   filename << ".ics";
 
   cout << "Вывод в файл " << filename.str() << endl;
 
   ofstream ofs(filename.str());
   ofs << "BEGIN:VCALENDAR\nVERSION:2.0\n" <<
-    "PRODID: ghost17 | Alexey Sorokin\n" <<
-    "CALSCALE: GREGORIAN\n\n";
+    "PRODID:ghost17 | Alexey Sorokin\n" <<
+    "CALSCALE:GREGORIAN\n\n";
 
   for (const auto& day : tt.days) {
     for (const auto& item : day.items) {
-      ofs << "BEGIN:VEVENT\nDTSTART:" <<
-        getPtimeString(item.time, "%Y%m%dT%H%M%S") << endl <<
-        "DTEND:" <<
-        getPtimeString(item.time + minutes(90), "%Y%m%dT%H%M%S") << endl <<
-        "SUMMARY:" << item.name << endl << "LOCATION:" << item.item_type <<
-        " / ";
+      distr.param(uniform_int_distribution<unsigned long long>::param_type(0xFFFFFFFF, 0x8000000000000000));
+      ofs << "BEGIN:VEVENT\nUID:" << distr(knuth) << "\nDTSTART:" <<
+        getPtimeString(item.time, "%Y%m%dT%H%M%S") << "\nDTSTAMP:" <<
+        getPtimeString(item.time, "%Y%m%dT%H%M%SZ") << "\nDTEND:" <<
+        getPtimeString(item.time + minutes(90), "%Y%m%dT%H%M%S") <<
+        "\nSUMMARY:" << item.name << "\nLOCATION:";
 
       for (const auto& place : item.places) {
         ofs << place;
@@ -128,45 +157,29 @@ void Manager::writeIcsTimeTable() {
           ofs << " / ";
       }
 
-      if (item.educators.size()) {
-        ofs << " / ";
-        for (const auto& educator : item.educators) {
-          ofs << educator;
-          if (educator != item.educators.back())
-            ofs << " / ";
-        }
-      }
+      ofs << " / " << item.item_type;
+
+      if (item.educators.size())
+        for (const auto& educator : item.educators)
+          ofs << " / " << educator;
 
       ofs << "\nEND:VEVENT\n\n";
     }
   }
 
+  ofs << "END:VCALENDAR";
   ofs.close();
 }
 
 Manager::Manager(int& argc, char* argv[]) {
-  try {
-    p.checkArgc(argc);
-    p = Params(argv[1], argv[2]);
-    if (argc > 3)
-      parser.parse_group(p, group_url(), false);
-    else
-      parser.parse_group(p, group_url(), true);
+  p.checkArgc(argc);
+  p = Params(argv[1], argv[2]);
+  if (argc > 3)
+    parser.parse_group(p, group_url(), false);
+  else
+    parser.parse_group(p, group_url(), true);
 
-    p = Params(p, argc, argv);
-  }
-  catch (bad_alloc const&) {
-    cerr << "Ошибка выделения памяти\n";
-    exit(1);
-  }
-  catch (const exception& e) {
-    cerr << e.what() << endl;
-    exit(1);
-  }
-  catch (const char* e) {
-    cerr << e << endl;
-    exit(1);
-  }
+  p = Params(p, argc, argv);
 
   cout.imbue(locale(locale::classic(), russian_facet));
   date_facet::input_collection_type short_weekdays, long_month;
@@ -180,10 +193,14 @@ Manager::Manager(int& argc, char* argv[]) {
 }
 
 void Manager::run() {
-  if (!p.list && !p.clear && (p.semester || p.until_semester)) {
+  if (p.week != 0 && !p.list &&
+      (p.semester || p.until_semester)) {
     unsigned short week = 18;
-    if (p.until_semester)
-      week = parser.parse_week(p, today_url());
+    if (p.until_semester) {
+      week = calcWeek();
+      if (day_clock::local_day().day_of_week().as_number() == 0)
+        week++;
+    }
     else if (p.semester)
       week = 1;
 
@@ -199,12 +216,13 @@ void Manager::run() {
   }
   else
     setTimeTable();
-  
-  if (p.list || p.clear)
+
+  if (p.list)
     return;
 
-  if (p.ics)
-    writeIcsTimeTable();
-  else
-    printTimeTable();
+  if (tt.days.size())
+    if (p.ics)
+      writeIcsTimeTable();
+    else
+      printTimeTable();
 }

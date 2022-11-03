@@ -1,9 +1,11 @@
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <thread>
 #include <limits>
+#include <random>
 
 #include "Params.hpp"
 #include "Parser.hpp"
@@ -16,7 +18,7 @@ private:
   Params p;
   Parser parser;
   TimeTable tt;
-  const string base_url = "http://mai.ru/education/studies/schedule/";
+  const string base_url = "https://mai.ru/education/studies/schedule/";
 
   const char* const short_weekday_names[8] = {
     "Вс", "Пн", "Вт","Ср", "Чт", "Пт", "Сб", "Сб"
@@ -31,8 +33,12 @@ private:
   const string today_url();
   const string  week_url();
   const string group_url();
+  const string session_url();
   const string getPtimeString(const ptime& time, const char* format);
 
+  void readTT();
+  void writeTT();
+  unsigned short calcWeek();
   void setTimeTable();
   void printTimeTable();
   void writeIcsTimeTable();
