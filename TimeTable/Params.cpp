@@ -79,7 +79,7 @@ Params::Params(Params& p, int& argc, char* argv[]) {
   }
 
   if (argc > 3 && (!group || group > group_names.size()) && !list)
-    throw std::invalid_argument("Номер группы не существует");
+    throw invalid_argument("Номер группы не существует");
 }
 
 void Params::checkArgc(int& argc) {
