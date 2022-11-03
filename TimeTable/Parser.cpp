@@ -6,7 +6,6 @@
 #endif
 
 using namespace std;
-using namespace std::filesystem;
 
 static size_t writeCallback(void* contents, size_t size,
   size_t nmemb, void* userp) {
@@ -210,14 +209,17 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   if (p.clear)
     return;
 
+  if (!std::filesystem::exists("groups"))
+    std::filesystem::create_directory("groups");
+
   pugi::xml_document* doc = new pugi::xml_document();
 #ifdef _WIN64
-  string filename = current_path().u8string() + "\\" + p.filename;
+  string filename = "groups\\" + p.filename;
 #else
-  string filename = "./" + p.filename;
+  string filename = "./groups/" + p.filename;
 #endif
 
-  if (exists(filename)) {
+  if (std::filesystem::exists(filename)) {
     cout << "Использую список групп из кэша\n\n";
     doc->load_file(filename.c_str());
   }

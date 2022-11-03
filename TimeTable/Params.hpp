@@ -11,7 +11,7 @@ struct Params {
     until_semester{ false },
     session{ false };
   std::vector<std::string> group_names;
-  std::string filename, proxy;
+  std::string filename, proxy, output_path = "";
 
   Params() {}
   Params(char* arg1, char* arg2);

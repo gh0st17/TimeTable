@@ -38,7 +38,13 @@ void Manager::writeTT() {
 }
 
 unsigned short Manager::calcWeek() {
-  short week = day_clock::local_day().week_number() - 34;
+  short week;
+  auto const today = day_clock::local_day();
+
+  if (today >= date(today.year(), 9, 1))
+    week = today.week_number() - 34;
+  else
+    week = today.week_number() - 6;
 
   if (week < 1)
     week = 1;
@@ -124,15 +130,28 @@ void Manager::writeIcsTimeTable() {
   knuth.seed((unsigned long long)time(0));
 
   stringstream filename;
+
+  if (!p.output_path.empty() &&
+      !std::filesystem::exists(p.output_path))
+    std::filesystem::create_directory(p.output_path);
+
+#ifdef _WIN64
+  filename << p.output_path << '/';
+#else
+  filename << p.output_path << '\';
+#endif
   filename << tt.group << 
     (p.semester ? "_Semester" : 
       (p.until_semester ? "_Until_Semester" : 
         (p.session ? "_Session" : "_Week_")));
-  if (!p.semester && !p.until_semester && !p.session)
+  
+  if (!p.semester && !p.until_semester && !p.session) {
     if (tt.week)
       filename << tt.week;
     else
       filename << "Today";
+  }
+  
   filename << ".ics";
 
   cout << "Вывод в файл " << filename.str() << endl;
