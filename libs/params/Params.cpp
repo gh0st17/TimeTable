@@ -1,4 +1,4 @@
-#include "Params.hpp"
+#include <Params.hpp>
 
 using namespace std;
 
@@ -11,7 +11,7 @@ Params::Params(char* arg1, char* arg2) {
     filename = to_string(dep) + '-' + to_string(course) + ".xml";
 }
 
-Params::Params(Params& p, int& argc, char* argv[]) {
+Params::Params(Params& p, unsigned& argc, char* argv[]) {
   *this = p;
   string param;
 
@@ -82,7 +82,7 @@ Params::Params(Params& p, int& argc, char* argv[]) {
     throw invalid_argument("Номер группы не существует");
 }
 
-void Params::checkArgc(int& argc) {
+void Params::checkArgc(unsigned& argc) {
   if (argc < 3)
     printHelp();
 }

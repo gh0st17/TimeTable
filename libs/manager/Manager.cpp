@@ -1,4 +1,4 @@
-#include "Manager.hpp"
+#include <Manager.hpp>
 
 #undef max
 
@@ -82,7 +82,7 @@ void Manager::setTimeTable() {
 }
 
 void Manager::printTimeTable() {
-  cout << tt.group << "\n\n";
+  cout << p.group_names[p.group - 1] << "\n\n";
 
   if (tt.week)
     cout << "Учебная неделя №" << tt.week << "\n\n";
@@ -171,7 +171,7 @@ void Manager::writeIcsTimeTable() {
   ofs.close();
 }
 
-Manager::Manager(int& argc, char* argv[]) {
+Manager::Manager(unsigned& argc, char* argv[]) {
   p.checkArgc(argc);
   p = Params(argv[1], argv[2]);
   if (argc > 3)
@@ -220,9 +220,10 @@ void Manager::run() {
   if (p.list)
     return;
 
-  if (tt.days.size())
+  if (tt.days.size()) {
     if (p.ics)
       writeIcsTimeTable();
     else
       printTimeTable();
+  }
 }

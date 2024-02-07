@@ -7,8 +7,8 @@
 #include <limits>
 #include <random>
 
-#include "Params.hpp"
-#include "Parser.hpp"
+#include <Params.hpp>
+#include <Parser.hpp>
 
 using namespace std;
 using namespace std::filesystem;
@@ -44,7 +44,7 @@ private:
   void writeIcsTimeTable();
 
 public:
-  Manager(int& argc, char* argv[]);
+  Manager(unsigned& argc, char* argv[]);
 
   void run();
 };

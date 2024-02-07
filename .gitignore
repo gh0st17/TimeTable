@@ -27,6 +27,9 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
+build/
+groups/
+.vscode/
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
@@ -240,6 +243,7 @@ ClientBin/
 *.publishsettings
 orleans.codegen.cs
 *.txt
+!CMakeLists.txt
 *.xml
 *.html
 *.ico

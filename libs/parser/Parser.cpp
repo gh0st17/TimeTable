@@ -1,4 +1,4 @@
-#include "Parser.hpp"
+#include <Parser.hpp>
 #ifdef _WIN64
 #include <curl.h>
 #else
@@ -50,7 +50,7 @@ void fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
 
   if (readBuffer->empty()) {
     delete readBuffer;
-    throw exception("Пустой буффер");
+    throw "Пустой буффер";
   }
 }
 
@@ -121,12 +121,13 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
 
   pugi::xml_document* doc = new pugi::xml_document();
   string* buffer = new string();
+  int retry_count = 1;
   loadDocument(p, doc, buffer, url);
   delete buffer;
 
   auto node = doc->find_node(group_predicate());
   if (!node)
-    throw exception("Ошибка в документе");
+    throw "Ошибка в документе";
   tt->group = node.child_value();
 
   if (p.session) {
@@ -142,13 +143,23 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
   size_t tp_size;
   pugi::xpath_node_set tp, doc_days;
 
-  doc_days = (p.session ?
-    doc->select_nodes("/html/body/main/div/div/div/article/div/ul/li") :
-    doc->select_nodes("/html/body/main/div/div/div/article/ul/li"));
+  while (doc_days.begin()->node() == NULL && retry_count != -1) {
+    doc_days = (p.session ?
+      doc->select_nodes("/html/body/main/div/div/div/article/div/ul/li") :
+      doc->select_nodes("/html/body/main/div/div/div/article/ul/li"));
+
+    if (doc_days.begin()->node() == NULL) {
+      cout << "Повторная попытка\n\n";
+      retry_count--;
+      string* buffer = new string();
+      loadDocument(p, doc, buffer, url);
+      delete buffer;
+    }
+  }
 
   if (doc_days.begin()->node() == NULL) {
     delete doc;
-    throw exception("Расписание не найдено");
+    throw "Расписание не найдено";
   }
 
   for (const auto& doc_day : doc_days) {
@@ -210,7 +221,7 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
     std::filesystem::create_directory("groups");
 
   pugi::xml_document* doc = new pugi::xml_document();
-  string filename = "groups/" + p.filename;
+  string filename = "./groups/" + p.filename;
 
   if (std::filesystem::exists(filename)) {
     cout << "Использую список групп из кэша\n\n";

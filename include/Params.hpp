@@ -11,12 +11,12 @@ struct Params {
     until_semester{ false }, session{ false },
     w_cur{ false }, w_next{ false };
   std::vector<std::string> group_names;
-  std::string filename, proxy, output_path = "";
+  std::string filename, proxy, output_path = ".";
 
   Params() {}
   Params(char* arg1, char* arg2);
-  Params(Params& p, int& argc, char* argv[]);
+  Params(Params& p, unsigned& argc, char* argv[]);
 
-  void checkArgc(int& argc);
+  void checkArgc(unsigned& argc);
   void printHelp();
 };
