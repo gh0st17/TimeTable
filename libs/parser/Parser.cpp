@@ -1,5 +1,5 @@
 #include <Parser.hpp>
-#ifdef _WIN64
+#ifdef WIN32
 #include <curl.h>
 #else
 #include <curl/curl.h>
@@ -97,6 +97,7 @@ void Parser::loadDocument(const Params& p, pugi::xml_document* doc, string* buff
     fetchURL(url, buffer);
   else
     fetchURL(url, buffer, p.proxy.c_str());
+
   prepareHTML(buffer);
   doc->load_string(buffer->c_str());
 }
@@ -115,7 +116,7 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
 }
 
 void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
-  string text, m_name;
+  string text, month_name;
   Item item;
   Day day;
 
@@ -165,8 +166,8 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
   for (const auto& doc_day : doc_days) {
     text = doc_day.node().select_node("div/div/span").node().child_value();
     boost::algorithm::trim(text);
-    m_name = matchRegex(text, regex(R"(\s(\W+)$)"), 2);
-    day.pdate = date(day.pdate.year(), month.at(m_name),
+    month_name = matchRegex(text, regex(R"(\s(\W+)$)"), 2);
+    day.pdate = date(day.pdate.year(), month.at(month_name),
       stoi(matchRegex(text, regex(R"(\d{2})"))));
     for (const auto& doc_item : doc_day.node().select_nodes("div/div/div")) {
       text = doc_item.node().select_node("div/p").node().child_value();
@@ -180,6 +181,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
       }
       else
         text = doc_item.node().select_node("div/p/span").node().child_value();
+
       boost::algorithm::trim(text);
       for (const auto& ch : { "(", ")" })
         boost::algorithm::erase_all(text, ch);
@@ -197,10 +199,10 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
         }
 
         if (i == 0) {
-          unsigned short h = stoi(matchRegex(text, regex(R"(\d+)"))),
-            m = stoi(matchRegex(text, regex(R"(\d+)"), 2));
+          unsigned short hour = stoi(matchRegex(text, regex(R"(\d+)"))),
+            minute = stoi(matchRegex(text, regex(R"(\d+)"), 2));
 
-          item.time = ptime(day.pdate, hours(h) + minutes(m));
+          item.time = ptime(day.pdate, hours(hour) + minutes(minute));
         }
         else
           item.places.push_back(text);
@@ -209,6 +211,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
       day.items.push_back(item);
       item = Item();
     }
+
     tt->days.push_back(day);
     day = Day();
   }
