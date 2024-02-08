@@ -1,9 +1,18 @@
 # TimeTable
 <p align="center">
-<img width="256" height="256" src="https://i.ibb.co/FXzfktM/Default-logo.png">
-<p align="center">
+  <img width="256" height="256" src="https://i.ibb.co/FXzfktM/Default-logo.png">
+</p>
 
-Парсер расписания с сайта МАИ
+<p align="center">
+  Парсер расписания с сайта МАИ
+</p>
+
+
+<p align="center">
+  <a href="https://github.com/gh0st17/TimeTable/releases/latest"><img src="https://img.shields.io/github/v/release/gh0st17/TimeTable?style=plastic"></a>
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=plastic">
+  <img src="https://img.shields.io/tokei/lines/github/gh0st17/TimeTable?style=plastic">
+</p>
 
 # Возможности:
 
