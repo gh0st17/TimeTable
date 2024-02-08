@@ -2,14 +2,16 @@
 
 using namespace std;
 
-int main(int argsc, char* argv[]) {
+int main(int argc, char* argv[]) {
   try {
-    unsigned argc = argsc;
     Manager m(argc, argv);
     m.run();
   }
   catch (bad_alloc const&) {
     cerr << "Ошибка выделения памяти\n";
+  }
+  catch (const std::exception& e) {
+    cerr << e.what() << endl;
   }
   catch (const char* e) {
     cerr << e << endl;

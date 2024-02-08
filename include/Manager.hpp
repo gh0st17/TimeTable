@@ -44,7 +44,7 @@ private:
   void writeIcsTimeTable();
 
 public:
-  Manager(unsigned& argc, char* argv[]);
+  Manager(const unsigned argc, char* argv[]);
 
   void run();
 };

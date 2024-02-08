@@ -220,11 +220,11 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
 }
 
 void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
-  if (!std::filesystem::exists("groups"))
-    std::filesystem::create_directory("groups");
+  if (!std::filesystem::exists(p.work_path + "/groups"))
+    std::filesystem::create_directory(p.work_path + "/groups");
 
   pugi::xml_document* doc = new pugi::xml_document();
-  string filename = "./groups/" + p.filename;
+  string filename = p.work_path + "/groups/" + p.filename;
 
   if (std::filesystem::exists(filename)) {
     cout << "Использую список групп из кэша\n\n";

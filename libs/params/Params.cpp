@@ -2,17 +2,7 @@
 
 using namespace std;
 
-Params::Params(char* arg1, char* arg2) {
-  dep = stoi(arg1), course = stoi(arg2);
-  if (dep > 12 || dep == 0 ||
-    course > 6 || course == 0)
-    printHelp();
-  else
-    filename = to_string(dep) + '-' + to_string(course) + ".xml";
-}
-
-Params::Params(Params& p, unsigned& argc, char* argv[]) {
-  *this = p;
+void Params::fetchParams(const unsigned argc, char* argv[]) {
   string param;
 
   for (size_t i = 3; i < argc; i++) {
@@ -55,6 +45,12 @@ Params::Params(Params& p, unsigned& argc, char* argv[]) {
       else
         throw invalid_argument("Путь вывода пропущен");
     }
+    else if (param == "--workdir" || param == "-d") {
+      if (i + 1 < argc)
+        work_path = argv[++i];
+      else
+        throw invalid_argument("Путь рабочей директории пропущен");
+    }
     else if (param == "--sleep") {
       if (i + 1 < argc) {
         sleep = stoi(argv[++i]);
@@ -77,32 +73,43 @@ Params::Params(Params& p, unsigned& argc, char* argv[]) {
     else
       throw invalid_argument(("Неизвестный параметр " + param).c_str());
   }
-
-  if (argc > 3 && (!group || group > group_names.size()) && !list)
-    throw invalid_argument("Номер группы не существует");
 }
 
-void Params::checkArgc(unsigned& argc) {
+bool Params::validateGroup(const unsigned argc) const {
+  return argc > 3 && (!group || group > group_names.size()) && !list;
+}
+
+void Params::setDepCourse(char* arg1, char* arg2) {
+  dep = stoi(arg1), course = stoi(arg2);
+  if (dep > 12 || dep == 0 ||
+    course > 6 || course == 0)
+    printHelp();
+  else
+    filename = to_string(dep) + '-' + to_string(course) + ".xml";
+}
+
+void Params::checkArgc(const unsigned argc) const {
   if (argc < 3)
     printHelp();
 }
 
-void Params::printHelp() {
+void Params::printHelp() const {
   cout << "TimeTable.exe {Институт} {Курс} --group <Число> --week <Число>\n" <<
     "TimeTable.exe {Институт} {Курс} --list\n" <<
     "TimeTable.exe --clear\n\n" <<
-    "  Институт     - Номер института от 1 до 12\n" <<
-    "  Курс         - Номер курса от 1 до 6\n" <<
-    "  --group, -g  - Номер группы из списка\n" <<
-    "  --week,  -w  - Номер недели от 1 до 18 или current для текущей недили, next — для следующей\n" <<
-    "  --list,  -l  - Показать только список групп\n" <<
-    "  --ics        - Вывод в ics файл\n" <<
-    "  --proxy      - Использовать прокси\n" <<
-    "                 <протокол://адрес:порт>\n" <<
-    "  --sem        - Загрузить весь семестр\n" <<
-    "  --tilsem     - Загрузить семестр от текущей недели до конца\n" <<
-    "  --sleep      - Время (в секундах) простоя после загрузки недели для семестра\n" <<
-    "  --session    - Расписание сессии\n" <<
-    "  --output, -o - Путь для вывода\n";
+    "  Институт      - Номер института от 1 до 12\n" <<
+    "  Курс          - Номер курса от 1 до 6\n" <<
+    "  --group,   -g - Номер группы из списка\n" <<
+    "  --week,    -w - Номер недели от 1 до 18 или current для текущей недили, next — для следующей\n" <<
+    "  --list,    -l - Показать только список групп\n" <<
+    "  --ics         - Вывод в ics файл\n" <<
+    "  --proxy       - Использовать прокси\n" <<
+    "                  <протокол://адрес:порт>\n" <<
+    "  --sem         - Загрузить весь семестр\n" <<
+    "  --tilsem      - Загрузить семестр от текущей недели до конца\n" <<
+    "  --sleep       - Время (в секундах) простоя после загрузки недели для семестра\n" <<
+    "  --session     - Расписание сессии\n" <<
+    "  --workdir, -d - Путь рабочей директории (кэш)\n" <<
+    "  --output,  -o - Путь для вывода\n";
   exit(1);
 }

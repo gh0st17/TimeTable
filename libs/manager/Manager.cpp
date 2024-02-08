@@ -112,8 +112,8 @@ void Manager::printTimeTable() {
 void Manager::writeIcsTimeTable() {
   uniform_int_distribution<unsigned long long> distr;
   random_device rd;
-  knuth_b knuth(rd());
-  knuth.seed((unsigned long long)time(0));
+  mt19937 mt(rd());
+  mt.seed(time(0L));
 
   stringstream filename;
 
@@ -145,7 +145,7 @@ void Manager::writeIcsTimeTable() {
   for (const auto& day : tt.days) {
     for (const auto& item : day.items) {
       distr.param(uniform_int_distribution<unsigned long long>::param_type(0xFFFFFFFF, 0x8000000000000000));
-      ofs << "BEGIN:VEVENT\nUID:" << distr(knuth) << "\nDTSTART:" <<
+      ofs << "BEGIN:VEVENT\nUID:" << distr(mt) << "\nDTSTART:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%S") << "\nDTSTAMP:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%SZ") << "\nDTEND:" <<
         getPtimeString(item.time + minutes(90), "%Y%m%dT%H%M%S") <<
@@ -171,15 +171,18 @@ void Manager::writeIcsTimeTable() {
   ofs.close();
 }
 
-Manager::Manager(unsigned& argc, char* argv[]) {
+Manager::Manager(const unsigned argc, char* argv[]) {
   p.checkArgc(argc);
-  p = Params(argv[1], argv[2]);
+  p.setDepCourse(argv[1], argv[2]);
+  p.fetchParams(argc, argv);
+
   if (argc > 3)
     parser.parse_group(p, group_url(), false);
   else
     parser.parse_group(p, group_url(), true);
 
-  p = Params(p, argc, argv);
+  if (p.validateGroup(argc))
+    throw invalid_argument("Номер группы не существует");
 
   cout.imbue(locale(locale::classic(), russian_facet));
   date_facet::input_collection_type short_weekdays, long_month;
