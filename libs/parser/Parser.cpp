@@ -1,9 +1,5 @@
 #include <Parser.hpp>
-#ifdef WIN32
-#include <curl.h>
-#else
 #include <curl/curl.h>
-#endif
 
 using namespace std;
 
