@@ -244,7 +244,6 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
     auto attr = group.node().find_attribute
       (
         [](pugi::xml_attribute& attr) {
-          cout << attr.name() << ' ' << attr.value() << endl;
           return !strcmp(attr.name(), "role") && !strcmp(attr.value(), "tabpanel");
         }
       );
