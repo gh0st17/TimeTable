@@ -84,7 +84,7 @@ void Manager::setTimeTable() {
 void Manager::printTimeTable() {
   cout << p.group_names[p.group - 1] << "\n\n";
 
-  if (tt.week)
+  if (p.week)
     cout << "Учебная неделя №" << tt.week << "\n\n";
 
   for (const auto& day : tt.days) {
@@ -196,8 +196,7 @@ Manager::Manager(const unsigned argc, char* argv[]) {
 }
 
 void Manager::run() {
-  if (p.week != 0 && !p.list &&
-      (p.semester || p.until_semester)) {
+  if (!p.week && !p.list && (p.semester || p.until_semester)) {
     unsigned short week = 18;
     if (p.until_semester) {
       week = calcWeek();
@@ -212,7 +211,7 @@ void Manager::run() {
       p.week = week;
       setTimeTable();
       if (week != 18) {
-        cout << "Ожидаю " << p.sleep << " секунд\n";
+        cout << "Ожидаю " << p.sleep << " сек.\n";
         this_thread::sleep_for(chrono::seconds(p.sleep));
       }
     }

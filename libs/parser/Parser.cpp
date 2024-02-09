@@ -9,48 +9,51 @@ static size_t writeCallback(void* contents, size_t size,
   return size * nmemb;
 }
 
-void fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
-  CURLcode res;
+bool fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
+  bool res = false;
+  CURLcode curl_res;
   CURL* curl = curl_easy_init();
 
-  if (curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
-    curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookies.txt");
-    curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "cookies.txt");
-    curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
-    if (proxy)
-      curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
-    curl_easy_setopt(curl, CURLOPT_USERAGENT,
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 \
-(KHTML, like Gecko) Chrome/106.0.0.0 Safari/537.36 OPR/92.0.0.0");
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, readBuffer);
-    cout << "Загружаю страницу" << (proxy ? " через прокси" : "") << "...";
+  if (!curl)
+    throw std::runtime_error("Ошибка инициализации libcurl");
 
-    res = curl_easy_perform(curl);
-    if (res == CURLE_OPERATION_TIMEDOUT)
-      cout << "Таймаут операции превышен\n\n";
-    else if (res == CURLE_OK)
-      cout << "загружено\n\n";
-    else if (res == CURLE_RECV_ERROR)
-      cout << "Ошибка приема данных\n\n";
-    else if (res == CURLE_SSL_CONNECT_ERROR ||
-             res == CURLE_COULDNT_CONNECT)
-      cout << "Сбой при подключении\n\n";
+  std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curlGuard(curl, curl_easy_cleanup);
 
-    curl_easy_cleanup(curl);
+  curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+  curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+  curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
+  curl_easy_setopt(curl, CURLOPT_COOKIEJAR, "cookies.txt");
+  curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "cookies.txt");
+  curl_easy_setopt(curl, CURLOPT_ACCEPT_ENCODING, "gzip");
+  if (proxy)
+    curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
+  curl_easy_setopt(curl, CURLOPT_USERAGENT,
+    "Mozilla/5.0 (Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
+(KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36");
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, readBuffer);
+  cout << "Загружаю страницу" << (proxy ? " через прокси" : "") << "...";
+
+  curl_res = curl_easy_perform(curl);
+  if (curl_res == CURLE_OPERATION_TIMEDOUT)
+    cout << "Таймаут операции превышен\n\n";
+  else if (curl_res == CURLE_OK) {
+    cout << "загружено\n\n";
+    res = true;
   }
+  else if (curl_res == CURLE_RECV_ERROR)
+    cout << "Ошибка приема данных\n\n";
+  else if (curl_res == CURLE_SSL_CONNECT_ERROR ||
+            curl_res == CURLE_COULDNT_CONNECT)
+    cout << "Сбой при подключении\n\n";
 
-  if (readBuffer->empty()) {
-    delete readBuffer;
-    throw "Пустой буффер";
-  }
+  curl_easy_cleanup(curl);
+  return res;
 }
 
-bool Parser::group_predicate::operator()(pugi::xml_node node) const {
+bool Parser::group_name_predicate::operator()(pugi::xml_node node) const {
   return !strcmp(node.name(), "h1") &&
     !strcmp(node.first_attribute().value(), "mb-5");
 }
@@ -88,14 +91,20 @@ void Parser::prepareHTML(string* html) {
   }
 }
 
-void Parser::loadDocument(const Params& p, pugi::xml_document* doc, string* buffer, const string& url) {
+bool Parser::loadDocument(const Params& p, pugi::xml_document* doc, const string& url) {
+  bool res;
+  string* buffer = new string();
+
   if (p.proxy.empty())
-    fetchURL(url, buffer);
+    res = fetchURL(url, buffer);
   else
-    fetchURL(url, buffer, p.proxy.c_str());
+    res = fetchURL(url, buffer, p.proxy.c_str());
 
   prepareHTML(buffer);
   doc->load_string(buffer->c_str());
+
+  delete buffer;
+  return res;
 }
 
 const string Parser::matchRegex(const string str, const regex r, const size_t n) {
@@ -111,18 +120,21 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
+void Parser::parse(TimeTable* tt, const Params& p, const string& url, unsigned retry) {
   string text, month_name;
   Item item;
   Day day;
 
   pugi::xml_document* doc = new pugi::xml_document();
-  string* buffer = new string();
-  int retry_count = 1;
-  loadDocument(p, doc, buffer, url);
-  delete buffer;
+  if (!loadDocument(p, doc, url) && retry <= 3) {
+    cout << "Повторная попытка " << retry << " через " << p.sleep << " секунд\n";
+    this_thread::sleep_for(chrono::seconds(p.sleep));
+    parse(tt, p, url, retry++);
+    delete doc;
+    return;
+  }
 
-  auto node = doc->find_node(group_predicate());
+  auto node = doc->find_node(group_name_predicate());
   if (!node)
     throw "Ошибка в документе";
   tt->group = node.child_value();
@@ -140,19 +152,9 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url) {
   size_t tp_size;
   pugi::xpath_node_set tp, doc_days;
 
-  while (doc_days.begin()->node() == NULL && retry_count != -1) {
-    doc_days = (p.session ?
-      doc->select_nodes("/html/body/main/div/div/div/article/div/ul/li") :
-      doc->select_nodes("/html/body/main/div/div/div/article/ul/li"));
-
-    if (doc_days.begin()->node() == NULL) {
-      cout << "Повторная попытка\n\n";
-      retry_count--;
-      string* buffer = new string();
-      loadDocument(p, doc, buffer, url);
-      delete buffer;
-    }
-  }
+  doc_days = (p.session ?
+    doc->select_nodes("/html/body/main/div/div/div/article/div/ul/li") :
+    doc->select_nodes("/html/body/main/div/div/div/article/ul/li"));
 
   if (doc_days.begin()->node() == NULL) {
     delete doc;
@@ -227,10 +229,8 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
     doc->load_file(filename.c_str());
   }
   else {
-    string* buffer = new string();
-    loadDocument(p, doc, buffer, url);
+    loadDocument(p, doc, url);
     doc->save_file(filename.c_str());
-    delete buffer;
   }
 
   string text;
@@ -240,8 +240,23 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   unsigned i{ 1 };
   for (const auto& group : groups) {
     nodes = group.node().select_nodes("a");
+
+    auto attr = group.node().find_attribute
+      (
+        [](pugi::xml_attribute& attr) {
+          cout << attr.name() << ' ' << attr.value() << endl;
+          return !strcmp(attr.name(), "role") && !strcmp(attr.value(), "tabpanel");
+        }
+      );
+    if (attr.empty())
+      continue;
+
     for (const auto& node : nodes) {
       text = node.node().child_value();
+
+      if (text.empty())
+        continue;
+
       if (isPrint)
         cout << setw(2) << i++ << ") " << text << endl;
       p.group_names.push_back(text);
