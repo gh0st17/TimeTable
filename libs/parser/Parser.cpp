@@ -259,5 +259,5 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   sort(p.group_names.begin(), p.group_names.end());
   if (isPrint)
     for (unsigned i = 0; const auto& group : p.group_names)
-      cout << setw(2) << i++ << ") " << group << endl;
+      cout << setw(2) << ++i << ") " << group << endl;
 }
