@@ -40,6 +40,10 @@ struct TimeTable {
 
 class Parser {
 private:
+  const char* schedule_path = "/html/body/main/div/div/div/article/ul/li";
+  const char* session_path  = "/html/body/main/div/div/div/article/div/ul/li";
+  const char* group_path    = "/html/body/main/div/div/div/article/div/div";
+
   struct group_name_predicate {
     bool operator()(pugi::xml_node node) const;
   };
@@ -52,14 +56,14 @@ private:
     {"марта", 3}, {"апреля", 4}, {"мая", 5}, {"июня", 6}, {"июля", 7}, {"августа", 8},
     {"сентября", 9}, {"октября", 10}, {"ноября", 11}, {"декабря", 12} };
 
-  void prepareHTML(std::string* html);
-  bool loadDocument(const Params& p, pugi::xml_document* doc, const std::string& url);
+  void prepareHTML(std::string& html);
+  bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url);
   const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1);
 
 public:
   Parser() {};
 
-  void parse(TimeTable* tt, const Params& p, const std::string& url, unsigned retry = 1);
+  void parse(TimeTable& tt, const Params& p, const std::string& url, unsigned retry = 1);
   void parse_group(Params& p, const std::string& url, const bool isPrint);
 };
 

@@ -59,17 +59,17 @@ void Manager::setTimeTable() {
     for (const auto& group : p.group_names)
       cout << group << endl;
   else if (p.group && p.session)
-    parser.parse(&tt, p, session_url());
+    parser.parse(tt, p, session_url());
   else if (p.group && (p.w_cur || p.w_next)) {
     p.week = calcWeek();
     if (p.week != 18 && p.w_next)
       p.week++;
-    parser.parse(&tt, p, week_url());
+    parser.parse(tt, p, week_url());
   }
   else if (p.group && p.week)
-    parser.parse(&tt, p, week_url());
+    parser.parse(tt, p, week_url());
   else if (p.group && !p.week)
-    parser.parse(&tt, p, today_url());
+    parser.parse(tt, p, today_url());
   else {
     cout << "Введите номер группы: ";
     while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
@@ -77,7 +77,7 @@ void Manager::setTimeTable() {
       cin.clear();
       cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
     }
-    parser.parse(&tt, p, today_url());
+    parser.parse(tt, p, today_url());
   }
 }
 
