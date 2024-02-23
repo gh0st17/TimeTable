@@ -113,9 +113,10 @@ void Manager::printTimeTable() const {
 }
 
 void Manager::writeIcsTimeTable() const {
-  uniform_int_distribution<unsigned long long> distr;
+  using ull = unsigned long long;
+  uniform_int_distribution<ull> distr;
   random_device rd;
-  mt19937 mt(rd());
+  mt19937_64 mt(rd());
   mt.seed(time(0L));
 
   stringstream filename;
@@ -145,9 +146,11 @@ void Manager::writeIcsTimeTable() const {
     "PRODID:ghost17 | Alexey Sorokin\n" <<
     "CALSCALE:GREGORIAN\n\n";
 
+  const pair<ull, ull> range{ 0xFFFFFFFF, 0x8000000000000000 };
+
   for (const auto& day : tt.days) {
     for (const auto& item : day.items) {
-      distr.param(uniform_int_distribution<unsigned long long>::param_type(0xFFFFFFFF, 0x8000000000000000));
+      distr.param(uniform_int_distribution<ull>::param_type(range.first, range.second));
       ofs << "BEGIN:VEVENT\nUID:" << distr(mt) << "\nDTSTART:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%S") << "\nDTSTAMP:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%SZ") << "\nDTEND:" <<

@@ -118,12 +118,13 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-const pugi::xpath_node_set Parser::download_doc(TimeTable& tt, const Params& p, const string& url, unsigned retry) const {
+const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p, const string& url) const {
+  static unsigned retry = 1;
   pugi::xml_document doc;
   if (!loadDocument(p, doc, url) && retry <= 3) {
-    cout << "Повторная попытка " << retry << " через " << p.sleep << " секунд\n";
+    cout << "Повторная попытка " << retry++ << " через " << p.sleep << " секунд\n";
     this_thread::sleep_for(chrono::seconds(p.sleep));
-    parse(tt, p, url, retry++);
+    download_days(tt, p, url);
     return;
   }
 
@@ -153,10 +154,11 @@ const pugi::xpath_node_set Parser::download_doc(TimeTable& tt, const Params& p, 
     throw "Расписание не найдено";
   }
 
+  retry = 1;
   return doc_days;
 }
 
-void Parser::parse(TimeTable& tt, const Params& p, const string& url, unsigned retry) const {
+void Parser::parse(TimeTable& tt, const Params& p, const string& url) const {
   string text, month_name;
   Item item;
   Day day;
@@ -164,7 +166,7 @@ void Parser::parse(TimeTable& tt, const Params& p, const string& url, unsigned r
   size_t tp_size;
   pugi::xpath_node_set tp;
 
-  auto doc_days = download_doc(tt, p, url, retry);
+  auto doc_days = download_days(tt, p, url);
 
   for (const auto& doc_day : doc_days) {
     text = doc_day.node().select_node("div/div/span").node().child_value();

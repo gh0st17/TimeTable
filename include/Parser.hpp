@@ -58,13 +58,13 @@ private:
 
   void prepareHTML(std::string& html) const;
   bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url) const;
-  const pugi::xpath_node_set download_doc(TimeTable& tt, const Params& p, const string& url, unsigned retry) const;
+  const pugi::xpath_node_set download_days(TimeTable& tt, const Params& p, const string& url) const;
   const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1) const;
 
 public:
   Parser() {};
 
-  void parse(TimeTable& tt, const Params& p, const std::string& url, unsigned retry = 1) const;
+  void parse(TimeTable& tt, const Params& p, const std::string& url) const;
   void parse_group(Params& p, const std::string& url, const bool isPrint) const;
 };
 
