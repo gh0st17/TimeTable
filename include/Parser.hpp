@@ -58,6 +58,7 @@ private:
 
   void prepareHTML(std::string& html) const;
   bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url) const;
+  const pugi::xpath_node_set download_doc(TimeTable& tt, const Params& p, const string& url, unsigned retry) const;
   const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1) const;
 
 public:
