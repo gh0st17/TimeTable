@@ -23,14 +23,14 @@ struct Item {
   ptime time;
 };
 
-typedef std::vector<Item> Items;
+using Items = std::vector<Item>;
 
 struct Day {
   date pdate = day_clock::local_day();
   Items items;
 };
 
-typedef std::vector<Day> Days;
+using Days = std::vector<Day>;
 
 struct TimeTable {
   unsigned short week{ 0 };
@@ -58,7 +58,7 @@ private:
 
   void prepareHTML(std::string& html) const;
   bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url) const;
-  const pugi::xpath_node_set download_days(TimeTable& tt, const Params& p, const string& url) const;
+  const pugi::xpath_node_set download_days(TimeTable& tt, const Params& p, const std::string& url) const;
   const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1) const;
 
 public:

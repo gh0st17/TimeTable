@@ -124,8 +124,7 @@ const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p,
   if (!loadDocument(p, doc, url) && retry <= 3) {
     cout << "Повторная попытка " << retry++ << " через " << p.sleep << " секунд\n";
     this_thread::sleep_for(chrono::seconds(p.sleep));
-    download_days(tt, p, url);
-    return;
+    return download_days(tt, p, url);
   }
 
   auto node = doc.find_node(group_name_predicate());
