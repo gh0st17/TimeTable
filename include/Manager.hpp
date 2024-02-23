@@ -30,18 +30,18 @@ private:
   };
   date_facet* russian_facet = new date_facet();
 
-  const string today_url();
-  const string  week_url();
-  const string group_url();
-  const string session_url();
-  const string getPtimeString(const ptime& time, const char* format);
+  const string today_url() const;
+  const string  week_url() const;
+  const string group_url() const;
+  const string session_url() const;
+  const string getPtimeString(const ptime& time, const char* format) const;
 
-  void readTT();
-  void writeTT();
-  unsigned short calcWeek();
+ // void readTT();
+ // void writeTT();
+  unsigned short calcWeek() const;
   void setTimeTable();
-  void printTimeTable();
-  void writeIcsTimeTable();
+  void printTimeTable() const;
+  void writeIcsTimeTable() const;
 
 public:
   Manager(const unsigned argc, char* argv[]);

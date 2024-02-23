@@ -2,24 +2,24 @@
 
 #undef max
 
-const string Manager::today_url() {
+const string Manager::today_url() const {
   return base_url + "index.php?group=" + p.group_names[p.group - 1];
 }
 
-const string Manager::week_url() {
+const string Manager::week_url() const {
   return today_url() + "&week=" + to_string(p.week);
 }
 
-const string Manager::group_url() {
+const string Manager::group_url() const {
   return base_url + "groups.php?department=Институт+№"
     + to_string(p.dep) + "&course=" + to_string(p.course);
 }
 
-const string Manager::session_url() {
+const string Manager::session_url() const {
   return base_url + "session/index.php?group=" + p.group_names[p.group - 1];
 }
 
-const string Manager::getPtimeString(const ptime& time, const char* format) {
+const string Manager::getPtimeString(const ptime& time, const char* format) const {
   locale loc(cout.getloc(),
     new time_facet(format));
 
@@ -29,6 +29,8 @@ const string Manager::getPtimeString(const ptime& time, const char* format) {
   return ss.str();
 }
 
+/***
+ * @todo Caching to local database
 void Manager::readTT() {
 
 }
@@ -36,8 +38,9 @@ void Manager::readTT() {
 void Manager::writeTT() {
 
 }
+*/
 
-unsigned short Manager::calcWeek() {
+unsigned short Manager::calcWeek() const {
   short week;
   auto const today = day_clock::local_day();
 
@@ -81,7 +84,7 @@ void Manager::setTimeTable() {
   }
 }
 
-void Manager::printTimeTable() {
+void Manager::printTimeTable() const {
   cout << p.group_names[p.group - 1] << "\n\n";
 
   if (p.week)
@@ -109,7 +112,7 @@ void Manager::printTimeTable() {
   }
 }
 
-void Manager::writeIcsTimeTable() {
+void Manager::writeIcsTimeTable() const {
   uniform_int_distribution<unsigned long long> distr;
   random_device rd;
   mt19937 mt(rd());

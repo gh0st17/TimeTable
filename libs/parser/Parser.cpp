@@ -45,7 +45,7 @@ bool fetchURL(const string& url, string& readBuffer, const char* proxy = nullptr
   else if (curl_res == CURLE_RECV_ERROR)
     cout << "Ошибка приема данных\n\n";
   else if (curl_res == CURLE_SSL_CONNECT_ERROR ||
-            curl_res == CURLE_COULDNT_CONNECT)
+           curl_res == CURLE_COULDNT_CONNECT)
     cout << "Сбой при подключении\n\n";
 
   curl_easy_cleanup(curl);
@@ -63,7 +63,7 @@ bool Parser::week_predicate::operator()(pugi::xml_node node) const {
       "me-5 mb-2 fw-medium");
 }
 
-void Parser::prepareHTML(string& html) {
+void Parser::prepareHTML(string& html) const {
   const string block[] = { "head", "section",
     "header", "script", "form" };
   size_t p1, p2;
@@ -90,7 +90,7 @@ void Parser::prepareHTML(string& html) {
   }
 }
 
-bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const string& url) {
+bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const string& url) const {
   bool res;
   string buffer;
 
@@ -105,7 +105,7 @@ bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const string
   return res;
 }
 
-const string Parser::matchRegex(const string str, const regex r, const size_t n) {
+const string Parser::matchRegex(const string str, const regex r, const size_t n) const {
   string::const_iterator strBegin(str.cbegin());
   smatch match;
   size_t i = 0;
@@ -118,7 +118,7 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-void Parser::parse(TimeTable& tt, const Params& p, const string& url, unsigned retry) {
+void Parser::parse(TimeTable& tt, const Params& p, const string& url, unsigned retry) const {
   string text, month_name;
   Item item;
   Day day;
@@ -214,7 +214,7 @@ void Parser::parse(TimeTable& tt, const Params& p, const string& url, unsigned r
   }
 }
 
-void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
+void Parser::parse_group(Params& p, const string& url, const bool isPrint) const {
   if (!std::filesystem::exists(p.work_path + "/groups"))
     std::filesystem::create_directory(p.work_path + "/groups");
 
