@@ -54,7 +54,14 @@ bool fetchURL(const string& url, string& readBuffer, const char* proxy = nullptr
 
 bool Parser::group_name_predicate::operator()(pugi::xml_node node) const {
   return !strcmp(node.name(), "h1") &&
-    !strcmp(node.first_attribute().value(), "mb-5");
+    !strcmp(
+      node.find_attribute(
+        [](const pugi::xml_attribute& attr){
+          return !strcmp(attr.name(), "class"); 
+        }
+      ).value(),
+      "mb-5"
+    );
 }
 
 bool Parser::week_predicate::operator()(pugi::xml_node node) const {
