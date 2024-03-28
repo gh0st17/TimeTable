@@ -52,11 +52,6 @@ bool fetchURL(const string& url, string& readBuffer, const char* proxy = nullptr
   return res;
 }
 
-bool Parser::group_name_predicate::operator()(pugi::xml_node node) const {
-  return !strcmp(node.name(), "h1") &&
-    !strcmp(node.first_attribute().value(), "mb-5");
-}
-
 bool Parser::week_predicate::operator()(pugi::xml_node node) const {
   return !strcmp(node.name(), "h3") &&
     !strcmp(node.first_attribute().value(),
@@ -127,10 +122,7 @@ const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p,
     return download_days(tt, p, url);
   }
 
-  auto node = doc.find_node(group_name_predicate());
-  if (!node)
-    throw "Ошибка в документе";
-  tt.group = node.child_value();
+  tt.group = p.group_names[p.group - 1];
 
   if (p.session) {
     vector<string> splitted;
@@ -138,7 +130,7 @@ const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p,
     tt.group = splitted.back();
   }
 
-  node = doc.find_node(week_predicate());
+  const auto node = doc.find_node(week_predicate());
   if (!node.empty())
     tt.week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
 

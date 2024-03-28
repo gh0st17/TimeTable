@@ -44,10 +44,6 @@ private:
   const char* session_path  = "/html/body/main/div/div/div/article/div/ul/li";
   const char* group_path    = "/html/body/main/div/div/div/article/div/div";
 
-  struct group_name_predicate {
-    bool operator()(pugi::xml_node node) const;
-  };
-
   struct week_predicate {
     bool operator()(pugi::xml_node node) const;
   };
