@@ -16,8 +16,8 @@ struct Params {
   Params() {}
   
   void fetchParams(const unsigned argc, char* argv[]);
-  bool validateGroup(const unsigned argc) const;
-  void setDepCourse(char* arg1, char* arg2);
+  const bool validateGroup(const unsigned argc) const;
+  void setDepCourse(const char* arg1, const char* arg2);
   void checkArgc(const unsigned argc) const;
   void printHelp() const;
 };

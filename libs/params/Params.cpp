@@ -75,11 +75,11 @@ void Params::fetchParams(const unsigned argc, char* argv[]) {
   }
 }
 
-bool Params::validateGroup(const unsigned argc) const {
+const bool Params::validateGroup(const unsigned argc) const {
   return argc > 3 && (!group || group > group_names.size()) && !list;
 }
 
-void Params::setDepCourse(char* arg1, char* arg2) {
+void Params::setDepCourse(const char* arg1, const char* arg2) {
   dep = stoi(arg1), course = stoi(arg2);
   if (dep > 12 || dep == 0 ||
     course > 6 || course == 0)

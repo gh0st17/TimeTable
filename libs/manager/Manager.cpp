@@ -40,7 +40,7 @@ void Manager::writeTT() {
 }
 */
 
-unsigned short Manager::calcWeek() const {
+const uint16_t Manager::calcWeek() const {
   short week;
   auto const today = day_clock::local_day();
 

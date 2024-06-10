@@ -8,7 +8,7 @@ static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* use
   return size * nmemb;
 }
 
-bool fetchURL(const string& url, string& readBuffer, const char* proxy = nullptr) {
+const bool fetchURL(const string& url, string& readBuffer, const char* proxy = nullptr) {
   bool res = false;
   CURLcode curl_res;
   CURL* curl = curl_easy_init();
@@ -52,7 +52,7 @@ bool fetchURL(const string& url, string& readBuffer, const char* proxy = nullptr
   return res;
 }
 
-bool Parser::week_predicate::operator()(pugi::xml_node node) const {
+const bool Parser::week_predicate::operator()(pugi::xml_node node) const {
   return !strcmp(node.name(), "h3") &&
     !strcmp(node.first_attribute().value(),
       "me-5 mb-2 fw-medium");
@@ -85,7 +85,7 @@ void Parser::prepareHTML(string& html) const {
   }
 }
 
-bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const string& url) const {
+const bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const string& url) const {
   bool res;
   string buffer;
 

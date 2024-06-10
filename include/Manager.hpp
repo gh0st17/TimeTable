@@ -38,7 +38,7 @@ private:
 
  // void readTT();
  // void writeTT();
-  unsigned short calcWeek() const;
+  const uint16_t calcWeek() const;
   void setTimeTable();
   void printTimeTable() const;
   void writeIcsTimeTable() const;

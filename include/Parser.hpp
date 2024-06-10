@@ -45,7 +45,7 @@ private:
   const char* group_path    = "/html/body/main/div/div/div/article/div/div";
 
   struct week_predicate {
-    bool operator()(pugi::xml_node node) const;
+    const bool operator()(pugi::xml_node node) const;
   };
 
   const std::map<std::string, unsigned short> month = { {"января", 1}, {"февраля", 2},
@@ -53,7 +53,7 @@ private:
     {"сентября", 9}, {"октября", 10}, {"ноября", 11}, {"декабря", 12} };
 
   void prepareHTML(std::string& html) const;
-  bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url) const;
+  const bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url) const;
   const pugi::xpath_node_set download_days(TimeTable& tt, const Params& p, const std::string& url) const;
   const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1) const;
 
