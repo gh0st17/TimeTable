@@ -3,13 +3,12 @@
 
 using namespace std;
 
-static size_t writeCallback(void* contents, size_t size,
-  size_t nmemb, void* userp) {
+static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
   ((string*)userp)->append((char*)contents, size * nmemb);
   return size * nmemb;
 }
 
-bool fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
+const bool fetchURL(const string& url, string& readBuffer, const char* proxy = nullptr) {
   bool res = false;
   CURLcode curl_res;
   CURL* curl = curl_easy_init();
@@ -33,7 +32,7 @@ bool fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36");
   curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, readBuffer);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
   cout << "Загружаю страницу" << (proxy ? " через прокси" : "") << "...";
 
   curl_res = curl_easy_perform(curl);
@@ -46,36 +45,31 @@ bool fetchURL(const string& url, string* readBuffer, const char* proxy = NULL) {
   else if (curl_res == CURLE_RECV_ERROR)
     cout << "Ошибка приема данных\n\n";
   else if (curl_res == CURLE_SSL_CONNECT_ERROR ||
-            curl_res == CURLE_COULDNT_CONNECT)
+           curl_res == CURLE_COULDNT_CONNECT)
     cout << "Сбой при подключении\n\n";
 
   curl_easy_cleanup(curl);
   return res;
 }
 
-bool Parser::group_name_predicate::operator()(pugi::xml_node node) const {
-  return !strcmp(node.name(), "h1") &&
-    !strcmp(node.first_attribute().value(), "mb-5");
-}
-
-bool Parser::week_predicate::operator()(pugi::xml_node node) const {
+const bool Parser::week_predicate::operator()(pugi::xml_node node) const {
   return !strcmp(node.name(), "h3") &&
     !strcmp(node.first_attribute().value(),
       "me-5 mb-2 fw-medium");
 }
 
-void Parser::prepareHTML(string* html) {
+void Parser::prepareHTML(string& html) const {
   const string block[] = { "head", "section",
     "header", "script", "form" };
   size_t p1, p2;
 
   for (const auto& x : block) {
-    p1 = html->find("<" + x);
-    p2 = html->find("</" + x + ">");
+    p1 = html.find("<" + x);
+    p2 = html.find("</" + x + ">");
     while (p1 != string::npos && p2 != string::npos) {
-      html->erase(p1, p2 + x.length() + 3 - p1);
-      p1 = html->find("<" + x);
-      p2 = html->find("</" + x + ">");
+      html.erase(p1, p2 + x.length() + 3 - p1);
+      p1 = html.find("<" + x);
+      p2 = html.find("</" + x + ">");
     }
   }
 
@@ -83,17 +77,17 @@ void Parser::prepareHTML(string* html) {
   const string new_single[] = { " ", " ", "-" };
 
   for (size_t i = 0; i < single.size(); i++) {
-    p1 = html->find(single[i]);
+    p1 = html.find(single[i]);
     while (p1 != string::npos) {
-      html->replace(p1, single[i].length(), new_single[i].c_str(), 1);
-      p1 = html->find(single[i]);
+      html.replace(p1, single[i].length(), new_single[i].c_str(), 1);
+      p1 = html.find(single[i]);
     }
   }
 }
 
-bool Parser::loadDocument(const Params& p, pugi::xml_document* doc, const string& url) {
+const bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const string& url) const {
   bool res;
-  string* buffer = new string();
+  string buffer;
 
   if (p.proxy.empty())
     res = fetchURL(url, buffer);
@@ -101,13 +95,12 @@ bool Parser::loadDocument(const Params& p, pugi::xml_document* doc, const string
     res = fetchURL(url, buffer, p.proxy.c_str());
 
   prepareHTML(buffer);
-  doc->load_string(buffer->c_str());
+  doc.load_string(buffer.c_str());
 
-  delete buffer;
   return res;
 }
 
-const string Parser::matchRegex(const string str, const regex r, const size_t n) {
+const string Parser::matchRegex(const string str, const regex r, const size_t n) const {
   string::const_iterator strBegin(str.cbegin());
   smatch match;
   size_t i = 0;
@@ -120,46 +113,51 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
   return match[0];
 }
 
-void Parser::parse(TimeTable* tt, const Params& p, const string& url, unsigned retry) {
+const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p, const string& url) const {
+  static unsigned retry = 1;
+  pugi::xml_document doc;
+  if (!loadDocument(p, doc, url) && retry <= 3) {
+    cout << "Повторная попытка " << retry++ << " через " << p.sleep << " секунд\n";
+    this_thread::sleep_for(chrono::seconds(p.sleep));
+    return download_days(tt, p, url);
+  }
+
+  tt.group = p.group_names[p.group - 1];
+
+  if (p.session) {
+    vector<string> splitted;
+    boost::algorithm::split(splitted, tt.group, boost::is_any_of(" "));
+    tt.group = splitted.back();
+  }
+
+  const auto node = doc.find_node(week_predicate());
+  if (!node.empty())
+    tt.week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
+
+  auto doc_days = [&]() {
+    if (p.session)
+      return doc.select_nodes(session_path);
+    else
+      return doc.select_nodes(schedule_path);
+  }();
+
+  if (doc_days.empty()) {
+    throw "Расписание не найдено";
+  }
+
+  retry = 1;
+  return doc_days;
+}
+
+void Parser::parse(TimeTable& tt, const Params& p, const string& url) const {
   string text, month_name;
   Item item;
   Day day;
 
-  pugi::xml_document* doc = new pugi::xml_document();
-  if (!loadDocument(p, doc, url) && retry <= 3) {
-    cout << "Повторная попытка " << retry << " через " << p.sleep << " секунд\n";
-    this_thread::sleep_for(chrono::seconds(p.sleep));
-    parse(tt, p, url, retry++);
-    delete doc;
-    return;
-  }
-
-  auto node = doc->find_node(group_name_predicate());
-  if (!node)
-    throw "Ошибка в документе";
-  tt->group = node.child_value();
-
-  if (p.session) {
-    vector<string> splitted;
-    boost::algorithm::split(splitted, tt->group, boost::is_any_of(" "));
-    tt->group = splitted.back();
-  }
-
-  node = doc->find_node(week_predicate());
-  if (node != NULL)
-    tt->week = stoi(matchRegex(node.child_value(), regex(R"(\d+)")));
-
   size_t tp_size;
-  pugi::xpath_node_set tp, doc_days;
+  pugi::xpath_node_set tp;
 
-  doc_days = (p.session ?
-    doc->select_nodes("/html/body/main/div/div/div/article/div/ul/li") :
-    doc->select_nodes("/html/body/main/div/div/div/article/ul/li"));
-
-  if (doc_days.begin()->node() == NULL) {
-    delete doc;
-    throw "Расписание не найдено";
-  }
+  auto doc_days = download_days(tt, p, url);
 
   for (const auto& doc_day : doc_days) {
     text = doc_day.node().select_node("div/div/span").node().child_value();
@@ -171,7 +169,7 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url, unsigned r
       text = doc_item.node().select_node("div/p").node().child_value();
       boost::algorithm::trim(text);
       item.name = text;
-      if (doc_item.node().select_node("div/p/span/span") != NULL) {
+      if (!doc_item.node().select_node("div/p/span/span").node().empty()) {
         text = doc_item.node().select_node("div/p/span").node().child_value();
         boost::algorithm::trim(text);
         item.name += ' ' + text;
@@ -210,38 +208,35 @@ void Parser::parse(TimeTable* tt, const Params& p, const string& url, unsigned r
       item = Item();
     }
 
-    tt->days.push_back(day);
+    tt.days.push_back(day);
     day = Day();
   }
-
-  delete doc;
 }
 
-void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
+void Parser::parse_group(Params& p, const string& url, const bool isPrint) const {
   if (!std::filesystem::exists(p.work_path + "/groups"))
     std::filesystem::create_directory(p.work_path + "/groups");
 
-  pugi::xml_document* doc = new pugi::xml_document();
+  pugi::xml_document doc;
   string filename = p.work_path + "/groups/" + p.filename;
 
   if (std::filesystem::exists(filename)) {
     cout << "Использую список групп из кэша\n\n";
-    doc->load_file(filename.c_str());
+    doc.load_file(filename.c_str());
   }
   else {
     loadDocument(p, doc, url);
-    doc->save_file(filename.c_str());
+    doc.save_file(filename.c_str());
   }
 
   string text;
-  pugi::xpath_node_set nodes,
-    groups = doc->select_nodes("/html/body/main/div/div/div/article/div/div");
+  pugi::xpath_node_set nodes, groups = doc.select_nodes(group_path);
+  pugi::xml_attribute attr;
 
-  unsigned i{ 1 };
   for (const auto& group : groups) {
     nodes = group.node().select_nodes("a");
 
-    auto attr = group.node().find_attribute
+    attr = group.node().find_attribute
       (
         [](pugi::xml_attribute& attr) {
           return !strcmp(attr.name(), "role") && !strcmp(attr.value(), "tabpanel");
@@ -256,11 +251,12 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
       if (text.empty())
         continue;
 
-      if (isPrint)
-        cout << setw(2) << i++ << ") " << text << endl;
       p.group_names.push_back(text);
     }
   }
 
-  delete doc;
+  sort(p.group_names.begin(), p.group_names.end());
+  if (isPrint)
+    for (unsigned i = 0; const auto& group : p.group_names)
+      cout << setw(2) << ++i << ") " << group << endl;
 }

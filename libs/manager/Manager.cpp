@@ -2,24 +2,24 @@
 
 #undef max
 
-const string Manager::today_url() {
+const string Manager::today_url() const {
   return base_url + "index.php?group=" + p.group_names[p.group - 1];
 }
 
-const string Manager::week_url() {
+const string Manager::week_url() const {
   return today_url() + "&week=" + to_string(p.week);
 }
 
-const string Manager::group_url() {
+const string Manager::group_url() const {
   return base_url + "groups.php?department=Институт+№"
     + to_string(p.dep) + "&course=" + to_string(p.course);
 }
 
-const string Manager::session_url() {
+const string Manager::session_url() const {
   return base_url + "session/index.php?group=" + p.group_names[p.group - 1];
 }
 
-const string Manager::getPtimeString(const ptime& time, const char* format) {
+const string Manager::getPtimeString(const ptime& time, const char* format) const {
   locale loc(cout.getloc(),
     new time_facet(format));
 
@@ -29,6 +29,8 @@ const string Manager::getPtimeString(const ptime& time, const char* format) {
   return ss.str();
 }
 
+/***
+ * @todo Caching to local database
 void Manager::readTT() {
 
 }
@@ -36,8 +38,9 @@ void Manager::readTT() {
 void Manager::writeTT() {
 
 }
+*/
 
-unsigned short Manager::calcWeek() {
+const uint16_t Manager::calcWeek() const {
   short week;
   auto const today = day_clock::local_day();
 
@@ -59,17 +62,17 @@ void Manager::setTimeTable() {
     for (const auto& group : p.group_names)
       cout << group << endl;
   else if (p.group && p.session)
-    parser.parse(&tt, p, session_url());
+    parser.parse(tt, p, session_url());
   else if (p.group && (p.w_cur || p.w_next)) {
     p.week = calcWeek();
     if (p.week != 18 && p.w_next)
       p.week++;
-    parser.parse(&tt, p, week_url());
+    parser.parse(tt, p, week_url());
   }
   else if (p.group && p.week)
-    parser.parse(&tt, p, week_url());
+    parser.parse(tt, p, week_url());
   else if (p.group && !p.week)
-    parser.parse(&tt, p, today_url());
+    parser.parse(tt, p, today_url());
   else {
     cout << "Введите номер группы: ";
     while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
@@ -77,11 +80,11 @@ void Manager::setTimeTable() {
       cin.clear();
       cin.ignore(std::numeric_limits<streamsize>::max(), '\n');
     }
-    parser.parse(&tt, p, today_url());
+    parser.parse(tt, p, today_url());
   }
 }
 
-void Manager::printTimeTable() {
+void Manager::printTimeTable() const {
   cout << p.group_names[p.group - 1] << "\n\n";
 
   if (p.week)
@@ -109,10 +112,11 @@ void Manager::printTimeTable() {
   }
 }
 
-void Manager::writeIcsTimeTable() {
-  uniform_int_distribution<unsigned long long> distr;
+void Manager::writeIcsTimeTable() const {
+  using ull = unsigned long long;
+  uniform_int_distribution<ull> distr;
   random_device rd;
-  mt19937 mt(rd());
+  mt19937_64 mt(rd());
   mt.seed(time(0L));
 
   stringstream filename;
@@ -142,9 +146,11 @@ void Manager::writeIcsTimeTable() {
     "PRODID:ghost17 | Alexey Sorokin\n" <<
     "CALSCALE:GREGORIAN\n\n";
 
+  const pair<ull, ull> range{ 0xFFFFFFFF, 0x8000000000000000 };
+
   for (const auto& day : tt.days) {
     for (const auto& item : day.items) {
-      distr.param(uniform_int_distribution<unsigned long long>::param_type(0xFFFFFFFF, 0x8000000000000000));
+      distr.param(uniform_int_distribution<ull>::param_type(range.first, range.second));
       ofs << "BEGIN:VEVENT\nUID:" << distr(mt) << "\nDTSTART:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%S") << "\nDTSTAMP:" <<
         getPtimeString(item.time, "%Y%m%dT%H%M%SZ") << "\nDTEND:" <<
