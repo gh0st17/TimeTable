@@ -3,7 +3,7 @@
 
 using namespace std;
 
-static size_t writeCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+static std::size_t writeCallback(void* contents, std::size_t size, std::size_t nmemb, void* userp) {
   ((string*)userp)->append((char*)contents, size * nmemb);
   return size * nmemb;
 }
@@ -61,7 +61,7 @@ const bool Parser::week_predicate::operator()(pugi::xml_node node) const {
 void Parser::prepareHTML(string& html) const {
   const string block[] = { "head", "section",
     "header", "script", "form" };
-  size_t p1, p2;
+  std::size_t p1, p2;
 
   for (const auto& x : block) {
     p1 = html.find("<" + x);
@@ -76,7 +76,7 @@ void Parser::prepareHTML(string& html) const {
   const vector<string> single = { "</h5>", "&nbsp;", "&ndash;" };
   const string new_single[] = { " ", " ", "-" };
 
-  for (size_t i = 0; i < single.size(); i++) {
+  for (std::size_t i = 0; i < single.size(); i++) {
     p1 = html.find(single[i]);
     while (p1 != string::npos) {
       html.replace(p1, single[i].length(), new_single[i].c_str(), 1);
@@ -94,16 +94,18 @@ const bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const 
   else
     res = fetchURL(url, buffer, p.proxy.c_str());
 
-  prepareHTML(buffer);
-  doc.load_string(buffer.c_str());
+  if (res) {
+    prepareHTML(buffer);
+    doc.load_string(buffer.c_str());
+  }
 
   return res;
 }
 
-const string Parser::matchRegex(const string str, const regex r, const size_t n) const {
+const string Parser::matchRegex(const string str, const regex r, const std::size_t n) const {
   string::const_iterator strBegin(str.cbegin());
   smatch match;
-  size_t i = 0;
+  std::size_t i = 0;
   while (i++ < n && regex_search(strBegin, str.cend(), match, r)) {
     if (match.size() > 1)
       return match[n - 1];
@@ -114,12 +116,13 @@ const string Parser::matchRegex(const string str, const regex r, const size_t n)
 }
 
 const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p, const string& url) const {
-  static unsigned retry = 1;
-  pugi::xml_document doc;
-  if (!loadDocument(p, doc, url) && retry <= 3) {
-    cout << "Повторная попытка " << retry++ << " через " << p.sleep << " секунд\n";
-    this_thread::sleep_for(chrono::seconds(p.sleep));
-    return download_days(tt, p, url);
+  static pugi::xml_document doc;
+  if (!loadDocument(p, doc, url)) {
+    for (unsigned retry = 1; retry < 4; retry++) {
+      cout << "Повторная попытка " << retry << " через " << p.sleep << " секунд\n";
+      this_thread::sleep_for(chrono::seconds(p.sleep));
+      if (loadDocument(p, doc, url)) break;
+    }
   }
 
   tt.group = p.group_names[p.group - 1];
@@ -145,7 +148,6 @@ const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p,
     throw "Расписание не найдено";
   }
 
-  retry = 1;
   return doc_days;
 }
 
@@ -154,7 +156,7 @@ void Parser::parse(TimeTable& tt, const Params& p, const string& url) const {
   Item item;
   Day day;
 
-  size_t tp_size;
+  std::size_t tp_size;
   pugi::xpath_node_set tp;
 
   auto doc_days = download_days(tt, p, url);
@@ -185,7 +187,7 @@ void Parser::parse(TimeTable& tt, const Params& p, const string& url) const {
 
       tp = doc_item.node().select_nodes("ul/li");
       tp_size = tp.size();
-      for (size_t i = 0; i < tp_size; i++) {
+      for (std::size_t i = 0; i < tp_size; i++) {
         if (tp[i].node().first_child().name() != string("a"))
           text = tp[i].node().child_value();
         else {
@@ -214,6 +216,7 @@ void Parser::parse(TimeTable& tt, const Params& p, const string& url) const {
 }
 
 void Parser::parse_group(Params& p, const string& url, const bool isPrint) const {
+  bool res = true;
   if (!std::filesystem::exists(p.work_path + "/groups"))
     std::filesystem::create_directory(p.work_path + "/groups");
 
@@ -225,8 +228,13 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) const
     doc.load_file(filename.c_str());
   }
   else {
-    loadDocument(p, doc, url);
-    doc.save_file(filename.c_str());
+    if ( (res = loadDocument(p, doc, url)) )
+      doc.save_file(filename.c_str());
+  }
+
+  if (!res) {
+    std::cout << "Список групп не загружен\n\n";
+    return;
   }
 
   string text;

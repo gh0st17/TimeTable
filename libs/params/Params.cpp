@@ -5,7 +5,7 @@ using namespace std;
 void Params::fetchParams(const unsigned argc, char* argv[]) {
   string param;
 
-  for (size_t i = 3; i < argc; i++) {
+  for (std::size_t i = 3; i < argc; i++) {
     param = string(argv[i]);
     if (param == "--group" || param == "-g") {
       if (i + 1 < argc)

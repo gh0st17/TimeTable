@@ -74,6 +74,8 @@ void Manager::setTimeTable() {
   else if (p.group && !p.week)
     parser.parse(tt, p, today_url());
   else {
+    if (p.group_names.empty()) return;
+    
     cout << "Введите номер группы: ";
     while (!(cin >> p.group) || !p.group || p.group > p.group_names.size()) {
       cout << "Введите номер группы: ";

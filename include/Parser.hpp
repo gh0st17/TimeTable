@@ -55,7 +55,7 @@ private:
   void prepareHTML(std::string& html) const;
   const bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url) const;
   const pugi::xpath_node_set download_days(TimeTable& tt, const Params& p, const std::string& url) const;
-  const std::string matchRegex(const std::string str, const std::regex r, const size_t i = 1) const;
+  const std::string matchRegex(const std::string str, const std::regex r, const std::size_t i = 1) const;
 
 public:
   Parser() {};
