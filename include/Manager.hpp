@@ -5,6 +5,7 @@
 #include <sstream>
 #include <thread>
 #include <limits>
+#include <memory>
 #include <random>
 
 #include <Params.hpp>
@@ -15,7 +16,7 @@ using namespace std::filesystem;
 
 class Manager {
 private:
-  Params p;
+  Params& p;
   Parser parser;
   TimeTable tt;
   const string base_url = "https://mai.ru/education/studies/schedule/";
@@ -28,7 +29,7 @@ private:
     "июня", "июля", "августа", "сентября", "октября",
     "ноября", "декабря"
   };
-  date_facet* russian_facet = new date_facet();
+  std::unique_ptr<date_facet> russian_facet;
 
   const string today_url() const;
   const string  week_url() const;
@@ -44,7 +45,7 @@ private:
   void writeIcsTimeTable() const;
 
 public:
-  Manager(const unsigned argc, char* argv[]);
+  Manager(const unsigned argc, Params& p);
 
   void run();
 };

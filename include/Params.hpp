@@ -13,6 +13,8 @@ struct Params {
   std::vector<std::string> group_names;
   std::string filename, proxy, output_path = ".", work_path = ".";
 
+  int error_code = 0;
+
   Params() {}
   
   void fetchParams(const unsigned argc, char* argv[]);

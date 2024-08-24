@@ -179,11 +179,7 @@ void Manager::writeIcsTimeTable() const {
   ofs.close();
 }
 
-Manager::Manager(const unsigned argc, char* argv[]) {
-  p.checkArgc(argc);
-  p.setDepCourse(argv[1], argv[2]);
-  p.fetchParams(argc, argv);
-
+Manager::Manager(const unsigned argc, Params& p) : p(p) {
   if (argc > 3)
     parser.parse_group(p, group_url(), false);
   else
@@ -192,7 +188,9 @@ Manager::Manager(const unsigned argc, char* argv[]) {
   if (p.validateGroup(argc))
     throw invalid_argument("Номер группы не существует");
 
-  cout.imbue(locale(locale::classic(), russian_facet));
+  russian_facet = std::make_unique<date_facet>();
+
+  cout.imbue(locale(locale::classic(), russian_facet.get()));
   date_facet::input_collection_type short_weekdays, long_month;
   copy(&short_weekday_names[0], &short_weekday_names[7],
     back_inserter(short_weekdays));

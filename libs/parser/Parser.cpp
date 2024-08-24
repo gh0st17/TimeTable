@@ -85,7 +85,7 @@ void Parser::prepareHTML(string& html) const {
   }
 }
 
-const bool Parser::loadDocument(const Params& p, pugi::xml_document& doc, const string& url) const {
+const bool Parser::loadDocument(Params& p, pugi::xml_document& doc, const string& url) const {
   bool res;
   string buffer;
 
@@ -115,7 +115,43 @@ const string Parser::matchRegex(const string str, const regex r, const std::size
   return match[0];
 }
 
-const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p, const string& url) const {
+void Parser::load_groups(Params& p) {
+  ifs.open(p.work_path + "/groups/" + p.filename);
+
+  if (!ifs) {
+    p.error_code = 1;
+    throw "Не могу открыть файл со списком групп для чтения";
+  }
+
+  std::string line;
+
+  while (!ifs.eof()) {
+    std::getline(ifs, line);
+    p.group_names.push_back(line);
+  }
+
+  ifs.close();
+}
+
+void Parser::save_groups(Params& p) {
+  ofs.open(p.work_path + "/groups/" + p.filename);
+
+  if (!ofs) {
+    p.error_code = 1;
+    throw "Не могу открыть файл со списком групп для записи";
+  }
+
+  for (std::size_t i = 0; i < p.group_names.size(); i++) {
+    ofs << p.group_names[i];
+
+    if (i < p.group_names.size() - 1U)
+      ofs << '\n';
+  }
+
+  ofs.close();
+}
+
+const pugi::xpath_node_set Parser::download_days(TimeTable& tt, Params& p, const string& url) const {
   static pugi::xml_document doc;
   if (!loadDocument(p, doc, url)) {
     for (unsigned retry = 1; retry < 4; retry++) {
@@ -145,13 +181,14 @@ const pugi::xpath_node_set Parser::download_days(TimeTable& tt, const Params& p,
   }();
 
   if (doc_days.empty()) {
+    p.error_code = 2;
     throw "Расписание не найдено";
   }
 
   return doc_days;
 }
 
-void Parser::parse(TimeTable& tt, const Params& p, const string& url) const {
+void Parser::parse(TimeTable& tt, Params& p, const string& url) const {
   string text, month_name;
   Item item;
   Day day;
@@ -215,24 +252,23 @@ void Parser::parse(TimeTable& tt, const Params& p, const string& url) const {
   }
 }
 
-void Parser::parse_group(Params& p, const string& url, const bool isPrint) const {
+void Parser::parse_group(Params& p, const string& url, const bool isPrint) {
   bool res = true;
   if (!std::filesystem::exists(p.work_path + "/groups"))
     std::filesystem::create_directory(p.work_path + "/groups");
 
   pugi::xml_document doc;
-  string filename = p.work_path + "/groups/" + p.filename;
+  const string filename = p.work_path + "/groups/" + p.filename;
 
   if (std::filesystem::exists(filename)) {
     cout << "Использую список групп из кэша\n\n";
-    doc.load_file(filename.c_str());
+    load_groups(p);
   }
-  else {
-    if ( (res = loadDocument(p, doc, url)) )
-      doc.save_file(filename.c_str());
-  }
+  else
+    res = loadDocument(p, doc, url);
 
   if (!res) {
+    p.error_code = 3;
     std::cout << "Список групп не загружен\n\n";
     return;
   }
@@ -263,7 +299,15 @@ void Parser::parse_group(Params& p, const string& url, const bool isPrint) const
     }
   }
 
+  if (!p.group_names.size()) {
+    p.error_code = 3;
+    std::cout << "Список групп не загружен\n\n";
+    return;
+  }
+
   sort(p.group_names.begin(), p.group_names.end());
+  save_groups(p);
+
   if (isPrint)
     for (unsigned i = 0; const auto& group : p.group_names)
       cout << setw(2) << ++i << ") " << group << endl;

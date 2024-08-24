@@ -85,7 +85,7 @@ void Params::setDepCourse(const char* arg1, const char* arg2) {
     course > 6 || course == 0)
     printHelp();
   else
-    filename = to_string(dep) + '-' + to_string(course) + ".xml";
+    filename = to_string(dep) + '-' + to_string(course) + ".txt";
 }
 
 void Params::checkArgc(const unsigned argc) const {

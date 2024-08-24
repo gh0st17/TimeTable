@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <iomanip>
+#include <fstream>
 #include <thread>
 #include <memory>
 #include <regex>
@@ -44,6 +45,9 @@ private:
   const char* session_path  = "/html/body/main/div/div/div/article/div/ul/li";
   const char* group_path    = "/html/body/main/div/div/div/article/div/div";
 
+  std::ifstream ifs;
+  std::ofstream ofs;
+
   struct week_predicate {
     const bool operator()(pugi::xml_node node) const;
   };
@@ -53,14 +57,16 @@ private:
     {"сентября", 9}, {"октября", 10}, {"ноября", 11}, {"декабря", 12} };
 
   void prepareHTML(std::string& html) const;
-  const bool loadDocument(const Params& p, pugi::xml_document& doc, const std::string& url) const;
-  const pugi::xpath_node_set download_days(TimeTable& tt, const Params& p, const std::string& url) const;
+  const bool loadDocument(Params& p, pugi::xml_document& doc, const std::string& url) const;
+  const pugi::xpath_node_set download_days(TimeTable& tt, Params& p, const std::string& url) const;
   const std::string matchRegex(const std::string str, const std::regex r, const std::size_t i = 1) const;
+  void load_groups(Params& p);
+  void save_groups(Params& p);
 
 public:
   Parser() {};
 
-  void parse(TimeTable& tt, const Params& p, const std::string& url) const;
-  void parse_group(Params& p, const std::string& url, const bool isPrint) const;
+  void parse(TimeTable& tt, Params& p, const std::string& url) const;
+  void parse_group(Params& p, const std::string& url, const bool isPrint);
 };
 
