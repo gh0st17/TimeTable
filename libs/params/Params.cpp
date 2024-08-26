@@ -81,11 +81,10 @@ const bool Params::validateGroup(const unsigned argc) const {
 
 void Params::setDepCourse(const char* arg1, const char* arg2) {
   dep = stoi(arg1), course = stoi(arg2);
-  if (dep > 12 || dep == 0 ||
-    course > 6 || course == 0)
-    printHelp();
-  else
+  if (dep > 0 && dep < 15 && dep != 13 && course > 0 && course < 7)
     filename = to_string(dep) + '-' + to_string(course) + ".txt";
+  else
+    printHelp();
 }
 
 void Params::checkArgc(const unsigned argc) const {
