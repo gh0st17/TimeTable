@@ -44,7 +44,7 @@ const uint16_t Manager::calcWeek() const {
   short week;
   auto const today = day_clock::local_day();
 
-  if (today >= date(today.year(), 9, 1))
+  if (today >= date(today.year(), 8, 1))
     week = today.week_number() - 34;
   else
     week = today.week_number() - 6;
